@@ -1,6 +1,6 @@
 (async () => {
 
-    let request = require('request');
+let request = require('request');
 let cheerio = require('cheerio');
 let fs = require('fs'); // Für Testzwecke
 const {Client} = require('pg');
@@ -36,22 +36,29 @@ async function storeGameDetails() {
     let AScore = $('#Visitor table td').eq(1).text()
     let HScore = $('#Home table td').eq(1).text()
     let HTeam = $('#Home td').last().html().split("<br>")[0]
-    let GameID = $('#GameInfo tr').eq(-2).text().split(" ")[1];
-    let GDate = $('#GameInfo tr').eq(-5).text();
-    let GType = $('#GameInfo tr').eq(-6).text();
+    let GameID = 10000 + $('#GameInfo tr').eq(-2).text().replace(/(\n)/gm,"").split(" ")[1]; //Playoff-Games are 10000+
+    let GDate = $('#GameInfo tr').eq(-5).text().replace(/(\n)/gm,"");
+    let GType = $('#GameInfo tr').eq(-6).text().replace(/(\n)/gm,"");
+    let GSeason = 2016;
+
+    let HTeamID = await client.query("SELECT id FROM team WHERE full_name_big = '"+ HTeam +"'");
+    let ATeamID = await client.query("SELECT id FROM team WHERE full_name_big = '"+ ATeam +"'");
 
     const query = {
-        text: 'INSERT INTO games VALUES($GameID, $HTeam, $ATeam, $HScore, $AScore, $GType, $GDate)',
+        text: 'INSERT INTO game VALUES($GameID, $HTeam, $ATeam, $HScore, $AScore, $GType, $GDate, $GFinishedIn, $GSeason)',
         values: {
             'GameID': GameID,
-            'HTeam': HTeam,
-            'ATeam': ATeam,
+            'HTeam': HTeamID.rows[0].id,
+            'ATeam': ATeamID.rows[0].id,
             'HScore': HScore,
             'AScore': AScore,
             'GType': GType,
-            'GDate': GDate
+            'GDate': GDate,
+            'GFinishedIn': 'R',
+            'GSeason': GSeason
         }
     }
+
     const res = await client.query(query);
 }
 
@@ -74,8 +81,8 @@ async function storePlays() {
     console.log(VisitorPlayersOnIce);
 }
 
-//await storeGameDetails();
-await storePlays();
+await storeGameDetails();
+//await storePlays();
 
 await client.end();
 
