@@ -63,11 +63,12 @@ async function storeGameDetails() {
 }
 
 async function storePlays() {
+    let GameID = 10000 + $('#GameInfo tr').eq(-2).text().replace(/(\n)/gm, "").split(" ")[1]; //Playoff-Games are 10000+
     let lastRow = $('tr.evenColor').get().length;
+    let allRows = $('tr.evenColor');
     for(i=0; i<lastRow; i++) {
-        let actualRow = $('tr.evenColor').eq(i).find('td'); //Change this to each (tr.evenColor).each...
+        let actualRow = allRows.eq(i).find('td'); //Change this to each (tr.evenColor).each...
         //GameID evtl besser als Parameter übergeben...
-        let GameID = 10000 + $('#GameInfo tr').eq(-2).text().replace(/(\n)/gm, "").split(" ")[1]; //Playoff-Games are 10000+
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID
         let Period = actualRow.eq(1).text(); //Period in second td
@@ -89,7 +90,7 @@ async function storePlays() {
         };
         let res = await client.query(query);
     }
-    let VisitorPlayersOnIce = [];
+    /*let VisitorPlayersOnIce = [];
     let HomePlayersOnIce = [];
     let VisitorOnIce = actualRow.eq(6).find('table table'); // Visitor on ice
     VisitorOnIce.each(function (index, element) {
@@ -99,8 +100,7 @@ async function storePlays() {
         let PlayerPos = PlayerNumberAndPos.split(/(\d+)/)[2];
         VisitorPlayersOnIce.push([PlayerName,PlayerNumber,PlayerPos])
     });
-
-    console.log(VisitorPlayersOnIce);
+    */
 }
 
 async function updatePlayer(name, team, position) {  // looks if Player is in DB and updates it if necessary
