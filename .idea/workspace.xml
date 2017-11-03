@@ -17,6 +17,10 @@
       <file leaf-file-name="scrape.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/scrape.js">
           <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
+            <state relative-caret-position="110">
+              <caret line="5" column="12" lean-forward="false" selection-start-line="5" selection-start-column="12" selection-end-line="5" selection-end-column="12" />
+=======
             <state relative-caret-position="802">
               <caret line="83" column="9" lean-forward="false" selection-start-line="83" selection-start-column="9" selection-end-line="83" selection-end-column="9" />
               <folding />
@@ -29,6 +33,7 @@
           <provider selected="true" editor-type-id="text-editor">
             <state relative-caret-position="345852">
               <caret line="19214" column="16" lean-forward="false" selection-start-line="19214" selection-start-column="16" selection-end-line="19214" selection-end-column="16" />
+>>>>>>> 1353dfc44dc9ef99c2fc9082b53dae237bda7511
               <folding />
             </state>
           </provider>
@@ -117,11 +122,15 @@
     <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="nodejs_interpreter_path" value="C:/Program Files/nodejs/node" />
     <property name="HbShouldOpenHtmlAsHb" value="" />
+<<<<<<< HEAD
+    <property name="settings.editor.selected.configurable" value="editor.preferences.smartKeys" />
+=======
     <property name="settings.editor.selected.configurable" value="settings.nodejs" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="JavaScriptPreferStrict" value="false" />
     <property name="JavaScriptWeakerCompletionTypeGuess" value="true" />
     <property name="javascript.nodejs.core.library.configured.version" value="8.2.1" />
+>>>>>>> 1353dfc44dc9ef99c2fc9082b53dae237bda7511
   </component>
   <component name="RecentsManager">
     <key name="CopyFile.RECENT_KEYS">
@@ -161,6 +170,9 @@
       <updated>1500481371620</updated>
       <workItem from="1500481373652" duration="660000" />
       <workItem from="1500845074778" duration="703000" />
+<<<<<<< HEAD
+      <workItem from="1500920944203" duration="286000" />
+=======
       <workItem from="1502061480371" duration="12000" />
       <workItem from="1502061588726" duration="53000" />
       <workItem from="1502061655970" duration="8000" />
@@ -180,11 +192,16 @@
       <workItem from="1509312762520" duration="6065000" />
       <workItem from="1509394173298" duration="1174000" />
       <workItem from="1509435270726" duration="599000" />
+>>>>>>> 1353dfc44dc9ef99c2fc9082b53dae237bda7511
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
+<<<<<<< HEAD
+    <option name="totallyTimeSpent" value="1649000" />
+=======
     <option name="totallyTimeSpent" value="29442000" />
+>>>>>>> 1353dfc44dc9ef99c2fc9082b53dae237bda7511
   </component>
   <component name="ToolWindowManager">
     <frame x="0" y="23" width="1175" height="992" extended-state="0" />
@@ -235,6 +252,8 @@
         </state>
       </provider>
     </entry>
+<<<<<<< HEAD
+=======
     <entry file="file://$PROJECT_DIR$/PlayByPlay.htm">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="326638">
@@ -422,6 +441,7 @@
         </state>
       </provider>
     </entry>
+>>>>>>> 1353dfc44dc9ef99c2fc9082b53dae237bda7511
     <entry file="file://$PROJECT_DIR$/sprape.js" />
     <entry file="file://$USER_HOME$/Desktop/iso" />
     <entry file="file://$PROJECT_DIR$/adsf">
@@ -448,6 +468,10 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/scrape.js">
       <provider selected="true" editor-type-id="text-editor">
+<<<<<<< HEAD
+        <state relative-caret-position="110">
+          <caret line="5" column="12" lean-forward="false" selection-start-line="5" selection-start-column="12" selection-end-line="5" selection-end-column="12" />
+=======
         <state relative-caret-position="802">
           <caret line="83" column="9" lean-forward="false" selection-start-line="83" selection-start-column="9" selection-end-line="83" selection-end-column="9" />
           <folding />
@@ -458,6 +482,7 @@
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="345852">
           <caret line="19214" column="16" lean-forward="false" selection-start-line="19214" selection-start-column="16" selection-end-line="19214" selection-end-column="16" />
+>>>>>>> 1353dfc44dc9ef99c2fc9082b53dae237bda7511
           <folding />
         </state>
       </provider>
