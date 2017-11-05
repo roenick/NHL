@@ -62,12 +62,33 @@ async function storeGameDetails() {
     let res = await client.query(query);
 }
 
-async function storePlays() {
+async function updatePlayer(name, team, position, number) {  // looks if Player is in DB and updates it if necessary
+        let result = await client.query(`SELECT * FROM player WHERE name = '${name}' limit 1`);
+
+        if (result.rowCount == 0) {   //Player not yet in the DB
+            const query1 = {
+                text: 'INSERT INTO player(name, actual_team_id, position, number) VALUES ($name, $team, $pos, $num)',
+                values: {'name': name, 'team': team, 'pos': position, 'num': number}
+            };
+            const res = await client.query(query1);
+        } else {
+            if (result.rows[0].actual_team_id != team) { // Team has changed, update (maybe we should test Date!!)
+                const query2 = {
+                    text: 'UPDATE player SET actual_team_id = $team WHERE id = $id',
+                    values: {'team': team, 'id': result.rows[0].id}
+                };
+                const res = await client.query(query2)
+            }
+        }
+    }
+
+
+async function storePlay() {
     let GameID = 10000 + $('#GameInfo tr').eq(-2).text().replace(/(\n)/gm, "").split(" ")[1]; //Playoff-Games are 10000+
-    let lastRow = $('tr.evenColor').get().length;
     let allRows = $('tr.evenColor');
-    for(i=0; i<lastRow; i++) {
-        let actualRow = allRows.eq(i).find('td'); //Change this to each (tr.evenColor).each...
+    let lastRow = allRows.get().length;
+    for(i=0; i<1; i++) {
+        let actualRow = allRows.eq(i).find('td');
         //GameID evtl besser als Parameter übergeben...
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID
@@ -89,43 +110,63 @@ async function storePlays() {
             }
         };
         let res = await client.query(query);
+
+        let VisitorPlayersOnIce = [];
+        let HomePlayersOnIce = [];
+
+        let VisitorOnIce = actualRow.eq(6).find('table table'); // Visitor on ice
+        VisitorOnIce.each(function (index, element) {
+            let PlayerName = $(element).find('font').attr('title').split(" - ")[1];
+            let PlayerNumberAndPos = $(element).text().replace(/(\r\n|\n|\r)/gm,"");
+            let PlayerNumber = PlayerNumberAndPos.split(/(\d+)/)[1];
+            let PlayerPos = PlayerNumberAndPos.split(/(\d+)/)[2];
+            VisitorPlayersOnIce.push([PlayerName,PlayerNumber,PlayerPos])
+        });
+        // somehow we have to look at Element 30 to get Home-Players
+        let HomeOnIce = actualRow.eq(30).find('table table'); // Home on ice
+        HomeOnIce.each(function (index, element) {
+            let PlayerName = $(element).find('font').attr('title').split(" - ")[1];
+            let PlayerNumberAndPos = $(element).text().replace(/(\r\n|\n|\r)/gm,"");
+            let PlayerNumber = PlayerNumberAndPos.split(/(\d+)/)[1];
+            let PlayerPos = PlayerNumberAndPos.split(/(\d+)/)[2];
+            HomePlayersOnIce.push([PlayerName,PlayerNumber,PlayerPos])
+        });
     }
-    /*let VisitorPlayersOnIce = [];
-    let HomePlayersOnIce = [];
-    let VisitorOnIce = actualRow.eq(6).find('table table'); // Visitor on ice
-    VisitorOnIce.each(function (index, element) {
-        let PlayerName = $(element).find('font').attr('title').split(" - ")[1];
-        let PlayerNumberAndPos = $(element).text().replace(/(\r\n|\n|\r)/gm,"");
-        let PlayerNumber = PlayerNumberAndPos.split(/(\d+)/)[1];
-        let PlayerPos = PlayerNumberAndPos.split(/(\d+)/)[2];
-        VisitorPlayersOnIce.push([PlayerName,PlayerNumber,PlayerPos])
-    });
-    */
 }
 
-async function updatePlayer(name, team, position) {  // looks if Player is in DB and updates it if necessary
-    let result = await client.query("SELECT * FROM player WHERE name = '"+ name +"' limit 1");
-
-    if (result.rowCount == 0) {   //Player not yet in the DB
-        const query1 = {
-            text: 'INSERT INTO player(name, actual_team_id, position) VALUES ($name, $team, $pos)',
-            values: {'name': name, 'team': team, 'pos': position}
-        };
-        const res = await client.query(query1);
-        } else {
-        if (result.rows[0].actual_team_id != team) { // Team has changed, update (maybe we should test Date!!)
-            const query2 = {
-                text: 'UPDATE player SET actual_team_id = $team WHERE id = $id',
-                values: {'team': team, 'id': result.rows[0].id}
-            };
-            const res = await client.query(query2)
+async function testPlayerOnIceInsertion() {
+    let query = {
+        text: 'INSERT INTO on_ice(team_id, play_id, position, player_id, number) VALUES($t_id, $pr_id, $pos, $py_id, $n)',
+        values: {
+            't_id': 'ANA',
+            'pr_id': 1000004110001,
+            'pos': 'G',
+            'py_id': 2,
+            'n': 11
         }
-    }
+    };
+    let res = await client.query(query);
 }
 
-//await updatePlayer('Hans2','NYR','G');
+async function testPlayerInsertion() {
+    let query = {
+        text: 'INSERT INTO player(name, actual_team_id, position) VALUES($name, $actual_team, $pos)',
+        values: {
+            'name': 'Hans Wurst',
+            'actual_team': 'ANA',
+            'pos': 'G',
+        }
+    };
+    let res = await client.query(query);
+}
+
+
+//await updatePlayer('Hans Wurst1','BOS','G');
 //await storeGameDetails();
-await storePlays();
+//await storePlay();
+
+
+//await testPlayerInsertion();
 
 await client.end();
 
