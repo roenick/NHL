@@ -85,6 +85,10 @@ async function updatePlayer(name, team, position, number) {  // looks if Player 
 
 async function storePlay() {
     let GameID = 10000 + $('#GameInfo tr').eq(-2).text().replace(/(\n)/gm, "").split(" ")[1]; //Playoff-Games are 10000+
+    let ATeam = $('#Visitor td').last().html().split("<br>")[0];
+    let HTeam = $('#Home td').last().html().split("<br>")[0];
+    let HTeamID = await client.query("SELECT id FROM team WHERE full_name_big = '"+ HTeam +"'");
+    let ATeamID = await client.query("SELECT id FROM team WHERE full_name_big = '"+ ATeam +"'");
     let allRows = $('tr.evenColor');
     let lastRow = allRows.get().length;
     for(i=0; i<1; i++) {
@@ -109,30 +113,34 @@ async function storePlay() {
                 'Strength': Strength,
             }
         };
-        let res = await client.query(query);
+        //let res = await client.query(query);
 
         let VisitorPlayersOnIce = [];
         let HomePlayersOnIce = [];
 
         let VisitorOnIce = actualRow.eq(6).find('table table'); // Visitor on ice
-        VisitorOnIce.each(function (index, element) {
-            let PlayerName = $(element).find('font').attr('title').split(" - ")[1];
-            let PlayerNumberAndPos = $(element).text().replace(/(\r\n|\n|\r)/gm,"");
+        for(let i=0;i<VisitorOnIce.length;i++) {
+            let PlayerName = VisitorOnIce.eq(i).find('font').attr('title').split(" - ")[1];
+            let PlayerNumberAndPos = VisitorOnIce.eq(i).text().replace(/(\r\n|\n|\r)/gm,"");
             let PlayerNumber = PlayerNumberAndPos.split(/(\d+)/)[1];
             let PlayerPos = PlayerNumberAndPos.split(/(\d+)/)[2];
+            await updatePlayer(PlayerName,ATeamID.rows[0].id, PlayerPos, PlayerNumber);
             VisitorPlayersOnIce.push([PlayerName,PlayerNumber,PlayerPos])
-        });
+        }
+
         // somehow we have to look at Element 30 to get Home-Players
         let HomeOnIce = actualRow.eq(30).find('table table'); // Home on ice
-        HomeOnIce.each(function (index, element) {
-            let PlayerName = $(element).find('font').attr('title').split(" - ")[1];
-            let PlayerNumberAndPos = $(element).text().replace(/(\r\n|\n|\r)/gm,"");
+        for(let i=0;i<HomeOnIce.length;i++) {
+            let PlayerName = HomeOnIce.eq(i).find('font').attr('title').split(" - ")[1];
+            let PlayerNumberAndPos = HomeOnIce.eq(i).text().replace(/(\r\n|\n|\r)/gm,"");
             let PlayerNumber = PlayerNumberAndPos.split(/(\d+)/)[1];
             let PlayerPos = PlayerNumberAndPos.split(/(\d+)/)[2];
+            await updatePlayer(PlayerName,HTeamID.rows[0].id, PlayerPos, PlayerNumber);
             HomePlayersOnIce.push([PlayerName,PlayerNumber,PlayerPos])
-        });
+        }
     }
 }
+
 
 async function testPlayerOnIceInsertion() {
     let query = {
@@ -161,9 +169,9 @@ async function testPlayerInsertion() {
 }
 
 
-//await updatePlayer('Hans Wurst1','BOS','G');
+//await updatePlayer('Seppu','ANA','G');
 //await storeGameDetails();
-//await storePlay();
+await storePlay();
 
 
 //await testPlayerInsertion();
