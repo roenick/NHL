@@ -36,20 +36,26 @@ async function storeGameDetails() {
     let AScore = $('#Visitor table td').eq(1).text();
     let HScore = $('#Home table td').eq(1).text();
     let HTeam = $('#Home td').last().html().split("<br>")[0];
+
     let GameID = 10000 + $('#GameInfo tr').eq(-2).text().replace(/(\n)/gm,"").split(" ")[1]; //Playoff-Games are 10000+
+
     let GDate = $('#GameInfo tr').eq(-5).text().replace(/(\n)/gm,"");
+    //let GameDate = GDate.split(", ")[1] + ", " + GDate.split(", ")[2]; //converts 'Monday, May 29, 2017' into 'May 29, 2017'
+
     let GType = $('#GameInfo tr').eq(-6).text().replace(/(\n)/gm,"");
     let GSeason = 2016;
 
     let HTeamID = await client.query("SELECT id FROM team WHERE full_name_big = '"+ HTeam +"'");
     let ATeamID = await client.query("SELECT id FROM team WHERE full_name_big = '"+ ATeam +"'");
+    let HTeamIDdef = HTeamID.rows[0].id;
+    let ATeamIDdef = ATeamID.rows[0].id;
 
     let query = {
         text: 'INSERT INTO game VALUES($GameID, $HTeam, $ATeam, $HScore, $AScore, $GType, $GDate, $GFinishedIn, $GSeason)',
         values: {
             'GameID': GameID,
-            'HTeam': HTeamID.rows[0].id,
-            'ATeam': ATeamID.rows[0].id,
+            'HTeam': HTeamIDdef,
+            'ATeam': ATeamIDdef,
             'HScore': HScore,
             'AScore': AScore,
             'GType': GType,
@@ -59,41 +65,16 @@ async function storeGameDetails() {
         }
     };
 
-    let res = await client.query(query);
+    //let res = await client.query(query);
+    await storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate);
 }
 
-async function updatePlayer(name, team, position, number) {  // looks if Player is in DB and updates it if necessary
-        let result = await client.query(`SELECT * FROM player WHERE name = '${name}' limit 1`);
+async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
 
-        if (result.rowCount == 0) {   //Player not yet in the DB
-            const query1 = {
-                text: 'INSERT INTO player(name, actual_team_id, position, number) VALUES ($name, $team, $pos, $num)',
-                values: {'name': name, 'team': team, 'pos': position, 'num': number}
-            };
-            const res = await client.query(query1);
-        } else {
-            if (result.rows[0].actual_team_id != team) { // Team has changed, update (maybe we should test Date!!)
-                const query2 = {
-                    text: 'UPDATE player SET actual_team_id = $team WHERE id = $id',
-                    values: {'team': team, 'id': result.rows[0].id}
-                };
-                const res = await client.query(query2)
-            }
-        }
-    }
-
-
-async function storePlay() {
-    let GameID = 10000 + $('#GameInfo tr').eq(-2).text().replace(/(\n)/gm, "").split(" ")[1]; //Playoff-Games are 10000+
-    let ATeam = $('#Visitor td').last().html().split("<br>")[0];
-    let HTeam = $('#Home td').last().html().split("<br>")[0];
-    let HTeamID = await client.query("SELECT id FROM team WHERE full_name_big = '"+ HTeam +"'");
-    let ATeamID = await client.query("SELECT id FROM team WHERE full_name_big = '"+ ATeam +"'");
     let allRows = $('tr.evenColor');
     let lastRow = allRows.get().length;
-    for(i=0; i<1; i++) {
+    for(i=0; i<10; i++) {
         let actualRow = allRows.eq(i).find('td');
-        //GameID evtl besser als Parameter übergeben...
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID
         let Period = actualRow.eq(1).text(); //Period in second td
@@ -114,17 +95,28 @@ async function storePlay() {
             }
         };
         //let res = await client.query(query);
+        if (EventType == 'FAC') {await handleFaceoff(actualRow.eq(5).html());}
+        if (EventType == 'HIT') {await handleHit(actualRow.eq(5).html());}
+        if (EventType == 'SHOT') {await handleShot(actualRow.eq(5).html());}
+        if (EventType == 'MISS') {await handleMiss(actualRow.eq(5).html());}
+        if (EventType == 'GIVE') {await handleGive(actualRow.eq(5).html());}
+        if (EventType == 'STOP') {await handleStop(actualRow.eq(5).html());}
+        if (EventType == 'BLOCK') {await handleBlock(actualRow.eq(5).html());}
+        if (EventType == 'PENL') {await handlePenalty(actualRow.eq(5).html());}
+        if (EventType == 'GOAL') {await handleGoal(actualRow.eq(5).html());}
+        if (EventType == 'TAKE') {await handleTakeaway(actualRow.eq(5).html());}
+
 
         let VisitorPlayersOnIce = [];
         let HomePlayersOnIce = [];
-
+        let GameDate = new Date(GDate);
         let VisitorOnIce = actualRow.eq(6).find('table table'); // Visitor on ice
         for(let i=0;i<VisitorOnIce.length;i++) {
             let PlayerName = VisitorOnIce.eq(i).find('font').attr('title').split(" - ")[1];
             let PlayerNumberAndPos = VisitorOnIce.eq(i).text().replace(/(\r\n|\n|\r)/gm,"");
             let PlayerNumber = PlayerNumberAndPos.split(/(\d+)/)[1];
             let PlayerPos = PlayerNumberAndPos.split(/(\d+)/)[2];
-            await updatePlayer(PlayerName,ATeamID.rows[0].id, PlayerPos, PlayerNumber);
+            await updatePlayer(PlayerName,ATeamIDdef, PlayerPos, PlayerNumber, GameDate);
             VisitorPlayersOnIce.push([PlayerName,PlayerNumber,PlayerPos])
         }
 
@@ -135,43 +127,77 @@ async function storePlay() {
             let PlayerNumberAndPos = HomeOnIce.eq(i).text().replace(/(\r\n|\n|\r)/gm,"");
             let PlayerNumber = PlayerNumberAndPos.split(/(\d+)/)[1];
             let PlayerPos = PlayerNumberAndPos.split(/(\d+)/)[2];
-            await updatePlayer(PlayerName,HTeamID.rows[0].id, PlayerPos, PlayerNumber);
+            await updatePlayer(PlayerName,HTeamIDdef, PlayerPos, PlayerNumber, GameDate);
             HomePlayersOnIce.push([PlayerName,PlayerNumber,PlayerPos])
         }
     }
 }
 
-
-async function testPlayerOnIceInsertion() {
-    let query = {
-        text: 'INSERT INTO on_ice(team_id, play_id, position, player_id, number) VALUES($t_id, $pr_id, $pos, $py_id, $n)',
-        values: {
-            't_id': 'ANA',
-            'pr_id': 1000004110001,
-            'pos': 'G',
-            'py_id': 2,
-            'n': 11
-        }
-    };
-    let res = await client.query(query);
+async function handleFaceoff(actualRow) { // 'NSH won Neu. Zone - NSH #12 FISHER vs PIT #87 CROSBY'
+    console.log(actualRow);
 }
 
-async function testPlayerInsertion() {
-    let query = {
-        text: 'INSERT INTO player(name, actual_team_id, position) VALUES($name, $actual_team, $pos)',
-        values: {
-            'name': 'Hans Wurst',
-            'actual_team': 'ANA',
-            'pos': 'G',
+async function handleHit(actualRow) { // 'NSH #9 FORSBERG HIT PIT #17 RUST, Neu. Zone'
+        console.log(actualRow);
+}
+
+async function handleShot(actualRow) { // 'PIT ONGOAL - #37 ROWNEY, Slap, Off. Zone, 31 ft.'
+        console.log(actualRow);
+}
+
+async function handleMiss(actualRow) { // 'NSH #59 JOSI, Slap, Wide of Net, Off. Zone, 64 ft.'
+    console.log(actualRow);
+}
+
+async function handleGive(actualRow) { // 'PIT GIVEAWAY - #3 MAATTA, Def. Zone '
+    console.log(actualRow);
+}
+
+async function handleStop(actualRow) { // 'PUCK IN CROWD,TV TIMEOUT' ??
+    console.log(actualRow);
+}
+
+async function handleBlock(actualRow) { // 'PIT #17 RUST BLOCKED BY NSH #14 EKHOLM, Wrist, Def. Zone'
+    console.log(actualRow);
+}
+
+async function handlePenalty(actualRow) { // 'NSH #76 SUBBAN Delaying Game-Puck over glass(2 min), Def. Zone'
+    console.log(actualRow);
+}
+
+async function handleGoal(actualRow) { // 'NSH #32 GAUDREAU(1), Wrist, Off. Zone, 17 ft. Assists: #51 WATSON(3); #12 FISHER(2)'
+    console.log(actualRow);
+}
+
+async function handleTakeaway(actualRow) { // 'NSH TAKEAWAY - #59 JOSI, Neu. Zone'
+    console.log(actualRow);
+}
+
+async function updatePlayer(name, team, position, number, GameDate) {  // looks if Player is in DB and updates it if necessary
+    let result = await client.query(`SELECT * FROM player WHERE name = '${name}' limit 1`);
+    if (result.rowCount == 0) {   //Player not yet in the DB
+        const query1 = {
+            text: 'INSERT INTO player(name, actual_team_id, position, number, date) VALUES ($name, $team, $pos, $num, $GDate)',
+            values: {'name': name, 'team': team, 'pos': position, 'num': number, 'GDate': GameDate.toDateString()}
+        };
+        let res = await client.query(query1);
+
+    } else {
+        let TempDate = new Date(result.rows[0].date);
+        if (result.rows[0].actual_team_id != team && TempDate.getTime() < GameDate.getTime()) { // Team has changed, update (maybe we should test Date!!)
+            const query2 = {
+                text: 'UPDATE player SET actual_team_id = $team, date = $GDate WHERE id = $id',
+                values: {'team': team, 'GDate': GameDate.toDateString(), 'id': result.rows[0].id}
+            };
+            let res = await client.query(query2)
         }
-    };
-    let res = await client.query(query);
+    }
 }
 
 
-//await updatePlayer('Seppu','ANA','G');
-//await storeGameDetails();
-await storePlay();
+//await updatePlayer('MATTHEW MURRAY','PIT','G', 30, new Date('SATURDAY, November 18, 2017'));
+await storeGameDetails();
+//await storePlay();
 
 
 //await testPlayerInsertion();
