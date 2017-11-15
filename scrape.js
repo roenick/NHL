@@ -73,7 +73,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
 
     let allRows = $('tr.evenColor');
     let lastRow = allRows.get().length;
-    for(i=0; i<10; i++) {
+    for(i=0; i<100; i++) {
         let actualRow = allRows.eq(i).find('td');
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID
@@ -94,7 +94,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
                 'Strength': Strength,
             }
         };
-        let res = await client.query(query);
+        //let res = await client.query(query);
 
         let VisitorPlayersOnIce = [];
         let HomePlayersOnIce = [];
@@ -120,9 +120,9 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
             HomePlayersOnIce.push([PlayerName,PlayerNumber,PlayerPos])
         }
 
-        if (EventType == 'FAC') {await handleFaceoff(ID, actualRow.eq(5).html(),HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
-        if (EventType == 'HIT') {await handleHit(actualRow.eq(5).html());}
-        if (EventType == 'SHOT') {await handleShot(actualRow.eq(5).html());}
+        if (EventType == 'FAC') {await handleFaceoff(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+        if (EventType == 'HIT') {await handleHit(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+        if (EventType == 'SHOT') {await handleShot(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
         if (EventType == 'MISS') {await handleMiss(actualRow.eq(5).html());}
         if (EventType == 'GIVE') {await handleGive(actualRow.eq(5).html());}
         if (EventType == 'STOP') {await handleStop(actualRow.eq(5).html());}
@@ -156,16 +156,54 @@ async function handleFaceoff(id, FaceOffText, HomePlayersOnIce, VisitorPlayersOn
         values: {'winningTeam': winningTeam, 'losingTeam': losingTeam, 'play_id': id, 'winning_player': winningPlayer, 'losing_player': losingPlayer }
     };
 
-    //console.log(query);
-    let res = await client.query(query);
-
+    //let res = await client.query(query);
 }
 
 
-async function handleHit(actualRow) { // 'NSH #9 FORSBERG HIT PIT #17 RUST, Neu. Zone'
+async function handleHit(id, hitText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) { // 'NSH #9 FORSBERG HIT PIT #17 RUST, Neu. Zone'
+    let textArray = hitText.split(' HIT ');
+    let hittingTeam = textArray[0].substring(0,3);
+    let hittedTeam = textArray[1].substring(0,3);
+    let hittingPlayer = "";
+    let hittedPlayer = "";
+    let hittingNumber = textArray[0].substring(5,7).trim();
+    let hittedNumber = textArray[1].substring(5,7).trim();
+
+    if (hittingTeam == ATeamIDdef) {
+        hittingPlayer = getPlayerName(hittingNumber,VisitorPlayersOnIce);
+        hittedPlayer = getPlayerName(hittedNumber, HomePlayersOnIce);
+    }
+    if (hittingTeam == HTeamIDdef) {
+        hittingPlayer = getPlayerName(hittingNumber, HomePlayersOnIce);
+        hittedPlayer = getPlayerName(hittedNumber, VisitorPlayersOnIce);
+    }
+
+    let query = {
+        text: 'INSERT INTO hit(hitter_id, hitted_id, hitter_team_id, hitted_team_id, play_id) VALUES($hitter, $hitted, $hitter_team, $hitted_team, $play_id)',
+        values: {'hitter': hittingPlayer, 'hitted': hittedPlayer, 'hitter_team': hittingTeam, 'hitted_team': hittedTeam, 'play_id': id }
+    };
+
+    //let res = await client.query(query);
 }
 
-async function handleShot(actualRow) { // 'PIT ONGOAL - #37 ROWNEY, Slap, Off. Zone, 31 ft.'
+async function handleShot(id, shootText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) { // 'PIT ONGOAL - #37 ROWNEY, Slap, Off. Zone, 31 ft.'
+    let textArray = shootText.split(', ');
+    let shootingTeam = textArray[0].substring(0,3);
+    let hashPos = textArray[0].search('#');
+    let shootingPlayerNumber = textArray[0].substring(hashPos+1,hashPos+3).trim();
+
+    if (shootingTeam == ATeamIDdef) { shootingPlayer = getPlayerName(shootingPlayerNumber,VisitorPlayersOnIce);}
+    if (shootingTeam == HTeamIDdef) { shootingPlayer = getPlayerName(shootingPlayerNumber,HomePlayersOnIce);}
+
+    let shotType = textArray[1].trim();
+    let shotDistance = textArray[3].substring(0,2).trim();
+
+    let query = {
+        text: 'INSERT INTO shot(player_id, distance, shot_type, team_id, play_id) VALUES($playerId, $dist, $shotType, $teamId, $playId)',
+        values: {'playerId': shootingPlayer, 'dist': shotDistance, 'shotType': shotType, 'teamId': shootingTeam, 'playId': id }
+    };
+
+    //let res = await client.query(query);
 }
 
 async function handleMiss(actualRow) { // 'NSH #59 JOSI, Slap, Wide of Net, Off. Zone, 64 ft.'
