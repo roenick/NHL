@@ -6,7 +6,6 @@ let fs = require('fs'); // Für Testzwecke lokale Files nehmen...
 const {Client} = require('pg'); //postgress
 const named = require('node-postgres-named');
 
-
 const client = new Client({
     user: 'postgres',
     host: 'localhost',
@@ -44,7 +43,7 @@ async function storeGameDetails() {
 
     let GType = $('#GameInfo tr').eq(-6).text().replace(/(\n)/gm,"");
     let GSeason = 2016;
-
+    console.log(HTeam);
     let HTeamID = await client.query("SELECT id FROM team WHERE full_name_big = '"+ HTeam +"'");
     let ATeamID = await client.query("SELECT id FROM team WHERE full_name_big = '"+ ATeam +"'");
     let HTeamIDdef = HTeamID.rows[0].id;
@@ -123,13 +122,13 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
         if (EventType == 'FAC') {await handleFaceoff(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
         if (EventType == 'HIT') {await handleHit(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
         if (EventType == 'SHOT') {await handleShot(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
-        if (EventType == 'MISS') {await handleMiss(actualRow.eq(5).html());}
-        if (EventType == 'GIVE') {await handleGive(actualRow.eq(5).html());}
-        if (EventType == 'STOP') {await handleStop(actualRow.eq(5).html());}
-        if (EventType == 'BLOCK') {await handleBlock(actualRow.eq(5).html());}
-        if (EventType == 'PENL') {await handlePenalty(actualRow.eq(5).html());}
-        if (EventType == 'GOAL') {await handleGoal(actualRow.eq(5).html());}
-        if (EventType == 'TAKE') {await handleTakeaway(actualRow.eq(5).html());}
+        if (EventType == 'MISS') {await handleMiss(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+        if (EventType == 'GIVE') {await handleGive(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+        if (EventType == 'STOP') {await handleStop(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+        if (EventType == 'BLOCK') {await handleBlock(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+        if (EventType == 'PENL') {await handlePenalty(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+        if (EventType == 'GOAL') {await handleGoal(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+        if (EventType == 'TAKE') {await handleTakeaway(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
     }
 }
 
@@ -158,7 +157,6 @@ async function handleFaceoff(id, FaceOffText, HomePlayersOnIce, VisitorPlayersOn
 
     //let res = await client.query(query);
 }
-
 
 async function handleHit(id, hitText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) { // 'NSH #9 FORSBERG HIT PIT #17 RUST, Neu. Zone'
     let textArray = hitText.split(' HIT ');
@@ -206,25 +204,45 @@ async function handleShot(id, shootText, HomePlayersOnIce, VisitorPlayersOnIce, 
     //let res = await client.query(query);
 }
 
-async function handleMiss(actualRow) { // 'NSH #59 JOSI, Slap, Wide of Net, Off. Zone, 64 ft.'
+async function handleMiss(id, missText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
+    // 'NSH #59 JOSI, Slap, Wide of Net, Off. Zone, 64 ft.'
+    let textArray = missText.split(', ');
+    let missingTeam = textArray[0].substring(0,3);
+    let missingPlayerNumber = textArray[0].substring(6,8).trim();
+
+    if (missingTeam == ATeamIDdef) { missingPlayer = getPlayerName(missingPlayerNumber,VisitorPlayersOnIce);}
+    if (missingTeam == HTeamIDdef) { missingPlayer = getPlayerName(missingPlayerNumber,HomePlayersOnIce);}
+    let shotType = textArray[1].trim();
+    let shotDistance = textArray[4].substring(0,2).trim();
 }
 
-async function handleGive(actualRow) { // 'PIT GIVEAWAY - #3 MAATTA, Def. Zone '
+async function handleGive(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
+    // 'PIT GIVEAWAY - #3 MAATTA, Def. Zone '
+    let textArray = giveText.split('#');
+    let givingTeam = textArray[0].substring(0,3);
+    let playerNumber = textArray[2].substring(0,2).trim();
+    if (givingTeam == ATeamIDdef) { givingPlayer = getPlayerName(playerNumber,VisitorPlayersOnIce);}
+    if (givingTeam == HTeamIDdef) { givingPlayer = getPlayerName(playerNumber,HomePlayersOnIce);}
 }
 
-async function handleStop(actualRow) { // 'PUCK IN CROWD,TV TIMEOUT' ??
+async function handleStop(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
+    // 'PUCK IN CROWD,TV TIMEOUT' ??
 }
 
-async function handleBlock(actualRow) { // 'PIT #17 RUST BLOCKED BY NSH #14 EKHOLM, Wrist, Def. Zone'
+async function handleBlock(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
+    // 'PIT #17 RUST BLOCKED BY NSH #14 EKHOLM, Wrist, Def. Zone'
 }
 
-async function handlePenalty(actualRow) { // 'NSH #76 SUBBAN Delaying Game-Puck over glass(2 min), Def. Zone'
+async function handlePenalty(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
+    // 'NSH #76 SUBBAN Delaying Game-Puck over glass(2 min), Def. Zone'
 }
 
-async function handleGoal(actualRow) { // 'NSH #32 GAUDREAU(1), Wrist, Off. Zone, 17 ft. Assists: #51 WATSON(3); #12 FISHER(2)'
+async function handleGoal(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
+    // 'NSH #32 GAUDREAU(1), Wrist, Off. Zone, 17 ft. Assists: #51 WATSON(3); #12 FISHER(2)'
 }
 
-async function handleTakeaway(actualRow) { // 'NSH TAKEAWAY - #59 JOSI, Neu. Zone'
+async function handleTakeaway(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
+    // 'NSH TAKEAWAY - #59 JOSI, Neu. Zone'
 }
 
 function getPlayerName(number, playerArray) {
@@ -238,13 +256,14 @@ function getPlayerName(number, playerArray) {
 
 
 async function updatePlayer(name, team, position, number, GameDate) {  // looks if Player is in DB and updates it if necessary
-    let result = await client.query(`SELECT * FROM player WHERE name = '${name}' limit 1`);
-    if (result.rowCount == 0) {   //Player not yet in the DB
+    //let result = await client.query(`SELECT * FROM player WHERE name = '${name}' limit 1`);
+    let result = null;
+    if (result == null || result.rowCount == 0 ) {   //Player not yet in the DB
         const query1 = {
             text: 'INSERT INTO player(name, actual_team_id, position, number, date) VALUES ($name, $team, $pos, $num, $GDate)',
             values: {'name': name, 'team': team, 'pos': position, 'num': number, 'GDate': GameDate.toDateString()}
         };
-        let res = await client.query(query1);
+        //let res = await client.query(query1);
 
     } else {
         let TempDate = new Date(result.rows[0].date);
@@ -253,7 +272,7 @@ async function updatePlayer(name, team, position, number, GameDate) {  // looks 
                 text: 'UPDATE player SET actual_team_id = $team, date = $GDate WHERE id = $id',
                 values: {'team': team, 'GDate': GameDate.toDateString(), 'id': result.rows[0].id}
             };
-            let res = await client.query(query2)
+            //let res = await client.query(query2)
         }
     }
 }
