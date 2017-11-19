@@ -43,7 +43,6 @@ async function storeGameDetails() {
 
     let GType = $('#GameInfo tr').eq(-6).text().replace(/(\n)/gm,"");
     let GSeason = 2016;
-    console.log(HTeam);
     let HTeamID = await client.query("SELECT id FROM team WHERE full_name_big = '"+ HTeam +"'");
     let ATeamID = await client.query("SELECT id FROM team WHERE full_name_big = '"+ ATeam +"'");
     let HTeamIDdef = HTeamID.rows[0].id;
@@ -70,10 +69,10 @@ async function storeGameDetails() {
 
 async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
 
-    let allRows = $('tr.evenColor');
+    let allRows = $('.evenColor');
     let lastRow = allRows.get().length;
-    for(i=0; i<100; i++) {
-        let actualRow = allRows.eq(i).find('td');
+    for(i=1; i<lastRow; i++) {
+        let actualRow = allRows.eq(i).find("td.bborder");
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID
         let Period = actualRow.eq(1).text(); //Period in second td
@@ -109,7 +108,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
         }
 
         // somehow we have to look at Element 30 to get Home-Players
-        let HomeOnIce = actualRow.eq(30).find('table table'); // Home on ice
+        let HomeOnIce = actualRow.eq(7).find('table table'); // Home on ice
         for(let i=0;i<HomeOnIce.length;i++) {
             let PlayerName = HomeOnIce.eq(i).find('font').attr('title').split(" - ")[1];
             let PlayerNumberAndPos = HomeOnIce.eq(i).text().replace(/(\r\n|\n|\r)/gm,"");
@@ -229,20 +228,75 @@ async function handleStop(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, H
     // 'PUCK IN CROWD,TV TIMEOUT' ??
 }
 
-async function handleBlock(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
+async function handleBlock(id, blockText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
     // 'PIT #17 RUST BLOCKED BY NSH #14 EKHOLM, Wrist, Def. Zone'
+    let textArray = blockText.split(' BY ');
+    let blockingTeam = textArray[1].substring(0,3);
+    let blockedTeam = textArray[0].substring(0,3);
+    let blockingPlayerNumber = textArray[1].substring(6,8).trim();
+    let blockedPlayerNumber = textArray[0].substring(5,7).trim();
+    let shotType = textArray[1].split(', ')[1];
+    if (blockingTeam == ATeamIDdef) {
+        let blockingPlayer = getPlayerName(playerNumber,VisitorPlayersOnIce);
+        let blockedPlaayer = getPlayerName(playerNumber, HomePlayersOnIce);
+    }
+    if (blockingTeam == HTeamIDdef) {
+        let blockingPlayer = getPlayerName(playerNumber,HomePlayersOnIce);
+        let blockedPlaayer = getPlayerName(playerNumber, VisitorPlayersOnIce);
+    }
 }
 
-async function handlePenalty(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
-    // 'NSH #76 SUBBAN Delaying Game-Puck over glass(2 min), Def. Zone'
+async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
+    // 'NSH #76 SUBBAN&#xA0;Delaying Game-Puck over glass(2 min), Def. Zone'
+    // PIT #71 MALKIN&#xA0;Slashing(2 min), Neu. Zone Drawn By: NSH #76 SUBBAN
+    let textArray = penaltyText.split(";");
+    let penaltyTeam = textArray[0];
+    let penaltyPlayerNumber = textArray[0].substring(5,7).trim();
+    let penaltyPlayer = "";
+    if (penaltyTeam == ATeamIDdef) { penaltyPlayer = getPlayerName(penaltyPlayerNumber,VisitorPlayersOnIce);}
+    if (penaltyTeam == HTeamIDdef) { penaltyPlayer = getPlayerName(penaltyPlayerNumber,HomePlayersOnIce);}
+    let i = 0;
+    let penaltyString = "";
+    while (! (textArray[1].substring(i,i+1)==="(")) {
+        penaltyString = penaltyString + textArray[1].substring(i,i+1);
+        i++
+    }
+    let penaltyDuration = textArray[1].substring(i+1,i+3).trim();
+    let drawnText = penaltyText.split(": ");
+    let drawnTeam = "";
+    let drawnPlayerNumber = "";
+    let drawnPlayer = "";
+    if (! (drawnText[1]==undefined)) {
+        drawnTeam = drawnText[1].substring(0, 3);
+        drawnPlayerNumber = drawnText[1].substring(5, 7).trim();
+        if (drawnTeam == ATeamIDdef) { drawnPlayer = getPlayerName(drawnPlayerNumber,VisitorPlayersOnIce);}
+        if (drawnTeam == HTeamIDdef) { drawnPlayer = getPlayerName(drawnPlayerNumber,HomePlayersOnIce);}
+    }
 }
 
-async function handleGoal(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
+async function handleGoal(id, goalText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
     // 'NSH #32 GAUDREAU(1), Wrist, Off. Zone, 17 ft. Assists: #51 WATSON(3); #12 FISHER(2)'
+    // Achtung: was passiert, wenn shotDistance < 10 ???
+    let textArray = goalText.split(", ");
+    let goalTeam = textArray[0].substring(0,3);
+    let goalScorerNumber = textArray[0].substring(5,7).trim();
+    let shotType = textArray[1];
+    let shotDistance = textArray[3].substring(0,3).trim();
+    let assistsTextArray = textArray[3].split("#");
+    let assistsObj= {team: goalTeam, assists : []};
+    for (let i=1; i<assistsTextArray.length;i++) {
+        assistsObj.assists.push(assistsTextArray[i].substring(0,2).trim());
+    }
+    console.log(assistsObj);
 }
 
-async function handleTakeaway(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
+async function handleTakeaway(id, takeText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
     // 'NSH TAKEAWAY - #59 JOSI, Neu. Zone'
+    let textArray = takeText.split(' - ');
+    let takingTeam = textArray[0].substring(0,3);
+    let takingPlayerNumber = textArray[1].substring(1,3).trim();
+    if (takingTeam == ATeamIDdef){ takingPlayer = getPlayerName(takingPlayerNumber,VisitorPlayersOnIce);}
+    if (takingTeam == HTeamIDdef){ takingPlayer = getPlayerName(takingPlayerNumber,HomePlayersOnIce);}
 }
 
 function getPlayerName(number, playerArray) {
@@ -253,7 +307,6 @@ function getPlayerName(number, playerArray) {
     }
     return false;   // Not found
 }
-
 
 async function updatePlayer(name, team, position, number, GameDate) {  // looks if Player is in DB and updates it if necessary
     //let result = await client.query(`SELECT * FROM player WHERE name = '${name}' limit 1`);
@@ -277,16 +330,12 @@ async function updatePlayer(name, team, position, number, GameDate) {  // looks 
     }
 }
 
-
 //await updatePlayer('MATTHEW MURRAY','PIT','G', 30, new Date('SATURDAY, November 18, 2017'));
 await storeGameDetails();
 //await storePlay();
-
-
 //await testPlayerInsertion();
 
 await client.end();
-
 
 })().catch(e => setImmediate(() => { throw e }));
 
