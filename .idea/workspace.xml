@@ -13,34 +13,36 @@
     <option name="LAST_RESOLUTION" value="IGNORE" />
   </component>
   <component name="FileEditorManager">
-    <leaf>
+    <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
       <file leaf-file-name="scrape.js" pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/scrape.js">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="564">
-              <caret line="285" column="46" lean-forward="false" selection-start-line="285" selection-start-column="46" selection-end-line="285" selection-end-column="46" />
+            <state relative-caret-position="419">
+              <caret line="100" column="4" lean-forward="true" selection-start-line="100" selection-start-column="4" selection-end-line="100" selection-end-column="4" />
               <folding>
-                <element signature="e#6481#7708#0" expanded="false" />
-                <element signature="e#7811#8924#0" expanded="false" />
-                <element signature="e#9030#9969#0" expanded="false" />
-                <element signature="e#10074#10613#0" expanded="false" />
-                <element signature="e#10718#11116#0" expanded="false" />
-                <element signature="e#11221#11261#0" expanded="false" />
-                <element signature="e#11368#12162#0" expanded="false" />
-                <element signature="e#12273#13575#0" expanded="false" />
-                <element signature="e#14453#14867#0" expanded="false" />
-                <element signature="e#14913#15111#0" expanded="false" />
-                <element signature="e#15181#16292#0" expanded="false" />
-                <element signature="e#15184#15239#0" expanded="false" />
-                <element signature="e#15406#15770#0" expanded="false" />
-                <element signature="e#15776#16290#0" expanded="false" />
-                <element signature="e#15926#16284#0" expanded="false" />
+                <element signature="e#7689#8916#0" expanded="false" />
+                <element signature="e#9019#10132#0" expanded="false" />
+                <element signature="e#10238#11177#0" expanded="false" />
+                <element signature="e#11282#11821#0" expanded="false" />
+                <element signature="e#11926#12324#0" expanded="false" />
+                <element signature="e#12576#13370#0" expanded="false" />
+                <element signature="e#15250#15920#0" expanded="false" />
+                <element signature="e#16029#16443#0" expanded="false" />
+                <element signature="e#16495#16693#0" expanded="false" />
+                <element signature="e#16763#17872#0" expanded="false" />
+                <element signature="e#17506#17864#0" expanded="false" />
               </folding>
             </state>
           </provider>
         </entry>
       </file>
     </leaf>
+  </component>
+  <component name="FindInProjectRecents">
+    <findStrings>
+      <find>console.</find>
+      <find>new</find>
+    </findStrings>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -55,6 +57,13 @@
   </component>
   <component name="JsBuildToolGruntFileManager" detection-done="true" sorting="DEFINITION_ORDER" />
   <component name="JsBuildToolPackageJson" detection-done="true" sorting="DEFINITION_ORDER" />
+  <component name="JsFlowSettings">
+    <service-enabled>false</service-enabled>
+    <exe-path />
+    <annotation-enable>false</annotation-enable>
+    <other-services-enabled>false</other-services-enabled>
+    <auto-save>true</auto-save>
+  </component>
   <component name="JsGulpfileManager">
     <detection-done>true</detection-done>
     <sorting>DEFINITION_ORDER</sorting>
@@ -63,9 +72,9 @@
     <handled-path value="$PROJECT_DIR$/node_modules" />
   </component>
   <component name="ProjectFrameBounds">
-    <option name="x" value="-7" />
-    <option name="width" value="1237" />
-    <option name="height" value="1047" />
+    <option name="y" value="23" />
+    <option name="width" value="1884" />
+    <option name="height" value="991" />
   </component>
   <component name="ProjectView">
     <navigator currentView="Scope" currentSubView="Project Files" proportions="" version="1">
@@ -82,7 +91,6 @@
       <foldersAlwaysOnTop value="true" />
     </navigator>
     <panes>
-      <pane id="Scratches" />
       <pane id="Scope">
         <subPane subId="Project Files">
           <expand>
@@ -105,6 +113,7 @@
           <select />
         </subPane>
       </pane>
+      <pane id="Scratches" />
     </panes>
   </component>
   <component name="PropertiesComponent">
@@ -125,7 +134,30 @@
       </list>
     </option>
   </component>
-  <component name="RunManager" selected="Node.js.Unnamed">
+  <component name="RunManager" selected="Node.js.SteX">
+    <configuration name="SteX" type="NodeJSConfigurationType" factoryName="Node.js" path-to-node="/usr/local/bin/node" path-to-js-file="scrape.js" working-dir="$PROJECT_DIR$">
+      <EXTENSION ID="com.jetbrains.nodejs.remote.docker.NodeJSDockerRunConfigurationExtension">
+        <option name="envVars">
+          <list />
+        </option>
+        <option name="extraHosts">
+          <list />
+        </option>
+        <option name="links">
+          <list />
+        </option>
+        <option name="networkDisabled" value="false" />
+        <option name="networkMode" value="bridge" />
+        <option name="portBindings">
+          <list />
+        </option>
+        <option name="publishAllPorts" value="false" />
+        <option name="version" value="1" />
+        <option name="volumeBindings">
+          <list />
+        </option>
+      </EXTENSION>
+    </configuration>
     <configuration name="Unnamed" type="NodeJSConfigurationType" factoryName="Node.js" path-to-node="project" path-to-js-file="scrape.js" working-dir="$PROJECT_DIR$">
       <EXTENSION ID="com.jetbrains.nodejs.remote.docker.NodeJSDockerRunConfigurationExtension">
         <option name="envVars">
@@ -149,6 +181,10 @@
         </option>
       </EXTENSION>
     </configuration>
+    <list size="2">
+      <item index="0" class="java.lang.String" itemvalue="Node.js.Unnamed" />
+      <item index="1" class="java.lang.String" itemvalue="Node.js.SteX" />
+    </list>
   </component>
   <component name="ShelveChangesManager" show_recycled="false">
     <option name="remove_strategy" value="false" />
@@ -161,30 +197,33 @@
       <option name="presentableId" value="Default" />
       <updated>1511125558918</updated>
       <workItem from="1511125560946" duration="2805000" />
+      <workItem from="1511189220630" duration="2883000" />
+      <workItem from="1511249160972" duration="8000" />
+      <workItem from="1511259359355" duration="8733000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="2805000" />
+    <option name="totallyTimeSpent" value="14429000" />
   </component>
   <component name="ToolWindowManager">
-    <frame x="-7" y="0" width="1237" height="1047" extended-state="0" />
+    <frame x="0" y="23" width="1884" height="991" extended-state="0" />
     <layout>
       <window_info id="Project" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="true" show_stripe_button="true" weight="0.0" sideWeight="0.5" order="0" side_tool="false" content_ui="combo" />
       <window_info id="TODO" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="6" side_tool="false" content_ui="tabs" />
-      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
-      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.32976446" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
+      <window_info id="Event Log" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="true" content_ui="tabs" />
+      <window_info id="Version Control" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Run" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.2992383" sideWeight="0.5" order="2" side_tool="false" content_ui="tabs" />
       <window_info id="Structure" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
-      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="false" content_ui="tabs" />
-      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="-1" side_tool="true" content_ui="tabs" />
+      <window_info id="Terminal" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="7" side_tool="false" content_ui="tabs" />
+      <window_info id="Favorites" active="false" anchor="left" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="2" side_tool="true" content_ui="tabs" />
       <window_info id="Debug" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="3" side_tool="false" content_ui="tabs" />
       <window_info id="Cvs" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="4" side_tool="false" content_ui="tabs" />
-      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
       <window_info id="Message" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
       <window_info id="Commander" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="0" side_tool="false" content_ui="tabs" />
-      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Inspection" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.4" sideWeight="0.5" order="5" side_tool="false" content_ui="tabs" />
+      <window_info id="Hierarchy" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="2" side_tool="false" content_ui="combo" />
+      <window_info id="Find" active="false" anchor="bottom" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.33" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
       <window_info id="Ant Build" active="false" anchor="right" auto_hide="false" internal_type="DOCKED" type="DOCKED" visible="false" show_stripe_button="true" weight="0.25" sideWeight="0.5" order="1" side_tool="false" content_ui="tabs" />
     </layout>
   </component>
@@ -195,38 +234,95 @@
     <option name="myLimit" value="2678400000" />
   </component>
   <component name="XDebuggerManager">
-    <breakpoint-manager />
+    <breakpoint-manager>
+      <option name="time" value="2" />
+    </breakpoint-manager>
     <watches-manager />
   </component>
   <component name="editorHistoryManager">
-    <entry file="file://$PROJECT_DIR$/.idea/workspace.xml">
+    <entry file="file://$PROJECT_DIR$/scrape.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="-2749">
+        <state relative-caret-position="0">
           <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
-          <folding />
+          <folding>
+            <element signature="e#7689#8916#0" expanded="false" />
+            <element signature="e#9019#10132#0" expanded="false" />
+            <element signature="e#10238#11177#0" expanded="false" />
+            <element signature="e#11282#11821#0" expanded="false" />
+            <element signature="e#11926#12324#0" expanded="false" />
+            <element signature="e#12576#13370#0" expanded="false" />
+            <element signature="e#15250#15920#0" expanded="false" />
+            <element signature="e#16029#16443#0" expanded="false" />
+            <element signature="e#16495#16693#0" expanded="false" />
+            <element signature="e#16763#17872#0" expanded="false" />
+            <element signature="e#17506#17864#0" expanded="false" />
+          </folding>
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/scrape.js">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="564">
-          <caret line="285" column="46" lean-forward="false" selection-start-line="285" selection-start-column="46" selection-end-line="285" selection-end-column="46" />
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
           <folding>
-            <element signature="e#6481#7708#0" expanded="false" />
-            <element signature="e#7811#8924#0" expanded="false" />
-            <element signature="e#9030#9969#0" expanded="false" />
-            <element signature="e#10074#10613#0" expanded="false" />
-            <element signature="e#10718#11116#0" expanded="false" />
-            <element signature="e#11221#11261#0" expanded="false" />
-            <element signature="e#11368#12162#0" expanded="false" />
-            <element signature="e#12273#13575#0" expanded="false" />
-            <element signature="e#14453#14867#0" expanded="false" />
-            <element signature="e#14913#15111#0" expanded="false" />
-            <element signature="e#15181#16292#0" expanded="false" />
-            <element signature="e#15184#15239#0" expanded="false" />
-            <element signature="e#15406#15770#0" expanded="false" />
-            <element signature="e#15776#16290#0" expanded="false" />
-            <element signature="e#15926#16284#0" expanded="false" />
+            <element signature="e#7689#8916#0" expanded="false" />
+            <element signature="e#9019#10132#0" expanded="false" />
+            <element signature="e#10238#11177#0" expanded="false" />
+            <element signature="e#11282#11821#0" expanded="false" />
+            <element signature="e#11926#12324#0" expanded="false" />
+            <element signature="e#12576#13370#0" expanded="false" />
+            <element signature="e#15250#15920#0" expanded="false" />
+            <element signature="e#16029#16443#0" expanded="false" />
+            <element signature="e#16495#16693#0" expanded="false" />
+            <element signature="e#16763#17872#0" expanded="false" />
+            <element signature="e#17506#17864#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scrape.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="0">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+          <folding>
+            <element signature="e#7689#8916#0" expanded="false" />
+            <element signature="e#9019#10132#0" expanded="false" />
+            <element signature="e#10238#11177#0" expanded="false" />
+            <element signature="e#11282#11821#0" expanded="false" />
+            <element signature="e#11926#12324#0" expanded="false" />
+            <element signature="e#12576#13370#0" expanded="false" />
+            <element signature="e#15250#15920#0" expanded="false" />
+            <element signature="e#16029#16443#0" expanded="false" />
+            <element signature="e#16495#16693#0" expanded="false" />
+            <element signature="e#16763#17872#0" expanded="false" />
+            <element signature="e#17506#17864#0" expanded="false" />
+          </folding>
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/.idea/workspace.xml">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="-2749">
+          <caret line="0" column="0" lean-forward="false" selection-start-line="0" selection-start-column="0" selection-end-line="0" selection-end-column="0" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/scrape.js">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="419">
+          <caret line="100" column="4" lean-forward="true" selection-start-line="100" selection-start-column="4" selection-end-line="100" selection-end-column="4" />
+          <folding>
+            <element signature="e#7689#8916#0" expanded="false" />
+            <element signature="e#9019#10132#0" expanded="false" />
+            <element signature="e#10238#11177#0" expanded="false" />
+            <element signature="e#11282#11821#0" expanded="false" />
+            <element signature="e#11926#12324#0" expanded="false" />
+            <element signature="e#12576#13370#0" expanded="false" />
+            <element signature="e#15250#15920#0" expanded="false" />
+            <element signature="e#16029#16443#0" expanded="false" />
+            <element signature="e#16495#16693#0" expanded="false" />
+            <element signature="e#16763#17872#0" expanded="false" />
+            <element signature="e#17506#17864#0" expanded="false" />
           </folding>
         </state>
       </provider>

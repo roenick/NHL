@@ -1,5 +1,39 @@
 (async () => {
 
+class storingObj {
+    constructor(table, client) {
+        this.table = table;
+        this.client = client;
+        this.data = {};
+    }
+    addData(obj) { // input is an object
+       for (var key in obj)  {
+           this.data[key] = obj[key];
+       }
+    }
+
+    async store() {
+        let queryText = "INSERT INTO " + this.table + "(";
+        let valuesObj = {};
+        for (var key in this.data) {
+            queryText = queryText + key + ", ";
+            valuesObj[key] = this.data[key];
+        }
+        queryText = queryText.slice(0, -2) + ") VALUES (";
+        for (var key in this.data) {
+            queryText = queryText + "$" + key + ", ";
+        }
+        queryText = queryText.slice(0,-2) + ")";
+        let query = {text: queryText, values: valuesObj};
+        console.log(query);
+        let res = await client.query(query);
+
+    }
+}
+//    text: 'INSERT INTO faceoff(winning_team_id, losing_team_id, play_id, winning_player_id, losing_player_id) VALUES($winningTeam, $losingTeam, $play_id, $winning_player, $losing_player)',
+//        values: {'winningTeam': winningTeam, 'losingTeam': losingTeam, 'play_id': id, 'winning_player': winningPlayer, 'losing_player': losingPlayer }
+
+
 let request = require('request');
 let cheerio = require('cheerio');
 let fs = require('fs'); // Für Testzwecke lokale Files nehmen...
@@ -250,11 +284,11 @@ async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOn
     // 'NSH #76 SUBBAN&#xA0;Delaying Game-Puck over glass(2 min), Def. Zone'
     // PIT #71 MALKIN&#xA0;Slashing(2 min), Neu. Zone Drawn By: NSH #76 SUBBAN
     let textArray = penaltyText.split(";");
-    let penaltyTeam = textArray[0];
+    let penaltyTeam = textArray[0].substring(0,3).trim();
     let penaltyPlayerNumber = textArray[0].substring(5,7).trim();
     let penaltyPlayer = "";
-    if (penaltyTeam == ATeamIDdef) { penaltyPlayer = getPlayerName(penaltyPlayerNumber,VisitorPlayersOnIce);}
-    if (penaltyTeam == HTeamIDdef) { penaltyPlayer = getPlayerName(penaltyPlayerNumber,HomePlayersOnIce);}
+    if (penaltyTeam == ATeamIDdef) { penaltyPlayer = await getPlayerName(penaltyPlayerNumber,VisitorPlayersOnIce);}
+    if (penaltyTeam == HTeamIDdef) { penaltyPlayer = await getPlayerName(penaltyPlayerNumber,HomePlayersOnIce);}
     let i = 0;
     let penaltyString = "";
     while (! (textArray[1].substring(i,i+1)==="(")) {
@@ -266,12 +300,17 @@ async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOn
     let drawnTeam = "";
     let drawnPlayerNumber = "";
     let drawnPlayer = "";
+    const penaltyObj = new storingObj('penalty', Client);
+    penaltyObj.addData({'length': penaltyDuration, player_id: penaltyPlayer, reason: penaltyString, team_id: penaltyTeam, play_id: id});
+
     if (! (drawnText[1]==undefined)) {
         drawnTeam = drawnText[1].substring(0, 3);
         drawnPlayerNumber = drawnText[1].substring(5, 7).trim();
-        if (drawnTeam == ATeamIDdef) { drawnPlayer = getPlayerName(drawnPlayerNumber,VisitorPlayersOnIce);}
-        if (drawnTeam == HTeamIDdef) { drawnPlayer = getPlayerName(drawnPlayerNumber,HomePlayersOnIce);}
+        if (drawnTeam == ATeamIDdef) { drawnPlayer = await getPlayerName(drawnPlayerNumber,VisitorPlayersOnIce);}
+        if (drawnTeam == HTeamIDdef) { drawnPlayer = await getPlayerName(drawnPlayerNumber,HomePlayersOnIce);}
+        penaltyObj.addData({'drawn_team_id': drawnTeam, 'drawn_player_id': drawnPlayer});
     }
+    await penaltyObj.store();
 }
 
 async function handleGoal(id, goalText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
@@ -283,11 +322,12 @@ async function handleGoal(id, goalText, HomePlayersOnIce, VisitorPlayersOnIce, H
     let shotType = textArray[1];
     let shotDistance = textArray[3].substring(0,3).trim();
     let assistsTextArray = textArray[3].split("#");
-    let assistsObj= {team: goalTeam, assists : []};
+    let assistsObj= {playID: id, team: goalTeam, assists : []};
     for (let i=1; i<assistsTextArray.length;i++) {
         assistsObj.assists.push(assistsTextArray[i].substring(0,2).trim());
     }
-    console.log(assistsObj);
+    // store the goal
+
 }
 
 async function handleTakeaway(id, takeText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
@@ -299,7 +339,7 @@ async function handleTakeaway(id, takeText, HomePlayersOnIce, VisitorPlayersOnIc
     if (takingTeam == HTeamIDdef){ takingPlayer = getPlayerName(takingPlayerNumber,HomePlayersOnIce);}
 }
 
-function getPlayerName(number, playerArray) {
+async function getPlayerName(number, playerArray) {
     for (var i = 0; i < playerArray.length; i++) {
         if (playerArray[i][1] == number) {
             return playerArray[i][0];   // Found it
@@ -309,14 +349,14 @@ function getPlayerName(number, playerArray) {
 }
 
 async function updatePlayer(name, team, position, number, GameDate) {  // looks if Player is in DB and updates it if necessary
-    //let result = await client.query(`SELECT * FROM player WHERE name = '${name}' limit 1`);
-    let result = null;
+    let result = await client.query(`SELECT * FROM player WHERE name = '${name}' limit 1`);
+    //let result = null;
     if (result == null || result.rowCount == 0 ) {   //Player not yet in the DB
         const query1 = {
             text: 'INSERT INTO player(name, actual_team_id, position, number, date) VALUES ($name, $team, $pos, $num, $GDate)',
             values: {'name': name, 'team': team, 'pos': position, 'num': number, 'GDate': GameDate.toDateString()}
         };
-        //let res = await client.query(query1);
+        let res = await client.query(query1);
 
     } else {
         let TempDate = new Date(result.rows[0].date);
