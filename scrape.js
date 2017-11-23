@@ -104,7 +104,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
 
     let allRows = $('.evenColor');
     let lastRow = allRows.get().length;
-    for(i=1; i<lastRow; i++) {
+    for(i=33; i<35; i++) {
         let actualRow = allRows.eq(i).find("td.bborder");
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID
@@ -169,18 +169,20 @@ async function handleFaceoff(id, FaceOffText, HomePlayersOnIce, VisitorPlayersOn
     let losingTeam = FaceOffText.substring(FaceOffText.search(' vs ') + 4, FaceOffText.search(' vs ') + 7);
     let textArray = FaceOffText.split(' #');
 
-    let winningNumber = textArray[1].substring(0,2).trim();
-    let losingNumber = textArray[2].substring(0,2).trim();
+    let winningNumber = textArray[1].substring(0,2).trim(); //Das stimmt nicht!! Manchmal ist der loosing Player vorne!!
+    let losingNumber = textArray[2].substring(0,2).trim();  // Dito!!
     let winningPlayer = "";
     let losingPlayer = "";
-
+    console.log(HomePlayersOnIce);
+    console.log(losingNumber);
     if (winningTeam == ATeamIDdef) {
-        winningPlayer = getPlayerName(winningNumber,VisitorPlayersOnIce, ATeamIDdef);
-        losingPlayer = getPlayerName(losingNumber, HomePlayersOnIce, ATeamIDdef);
+        winningPlayer = await getPlayerName(winningNumber,VisitorPlayersOnIce, ATeamIDdef);
+        losingPlayer = await getPlayerName(losingNumber, HomePlayersOnIce, ATeamIDdef);
     }
+    console.log(winningTeam);
     if (winningTeam == HTeamIDdef) {
-        winningPlayer = getPlayerName(winningNumber,HomePlayersOnIce, HTeamIDdef);
-        losingPlayer = getPlayerName(losingNumber, VisitorPlayersOnIce, HTeamIDdef);
+        winningPlayer = await getPlayerName(winningNumber,HomePlayersOnIce, HTeamIDdef);
+        losingPlayer = await getPlayerName(losingNumber, VisitorPlayersOnIce, HTeamIDdef);
     }
     let query = {
         text: 'INSERT INTO faceoff(winning_team_id, losing_team_id, play_id, winning_player_id, losing_player_id) VALUES($winningTeam, $losingTeam, $play_id, $winning_player, $losing_player)',
@@ -200,12 +202,12 @@ async function handleHit(id, hitText, HomePlayersOnIce, VisitorPlayersOnIce, HTe
     let hittedNumber = textArray[1].substring(5,7).trim();
 
     if (hittingTeam == ATeamIDdef) {
-        hittingPlayer = getPlayerName(hittingNumber,VisitorPlayersOnIce, ATeamIDdef);
-        hittedPlayer = getPlayerName(hittedNumber, HomePlayersOnIce, ATeamIDdef);
+        hittingPlayer = await getPlayerName(hittingNumber,VisitorPlayersOnIce, ATeamIDdef);
+        hittedPlayer = await getPlayerName(hittedNumber, HomePlayersOnIce, ATeamIDdef);
     }
     if (hittingTeam == HTeamIDdef) {
-        hittingPlayer = getPlayerName(hittingNumber, HomePlayersOnIce, HTeamIDdef);
-        hittedPlayer = getPlayerName(hittedNumber, VisitorPlayersOnIce, HTeamIDdef);
+        hittingPlayer = await getPlayerName(hittingNumber, HomePlayersOnIce, HTeamIDdef);
+        hittedPlayer = await getPlayerName(hittedNumber, VisitorPlayersOnIce, HTeamIDdef);
     }
 
     let query = {
@@ -222,8 +224,8 @@ async function handleShot(id, shootText, HomePlayersOnIce, VisitorPlayersOnIce, 
     let hashPos = textArray[0].search('#');
     let shootingPlayerNumber = textArray[0].substring(hashPos+1,hashPos+3).trim();
 
-    if (shootingTeam == ATeamIDdef) { shootingPlayer = getPlayerName(shootingPlayerNumber,VisitorPlayersOnIce, ATeamIDdef);}
-    if (shootingTeam == HTeamIDdef) { shootingPlayer = getPlayerName(shootingPlayerNumber,HomePlayersOnIce, HTeamIDdef);}
+    if (shootingTeam == ATeamIDdef) { shootingPlayer = await getPlayerName(shootingPlayerNumber,VisitorPlayersOnIce, ATeamIDdef);}
+    if (shootingTeam == HTeamIDdef) { shootingPlayer = await getPlayerName(shootingPlayerNumber,HomePlayersOnIce, HTeamIDdef);}
 
     let shotType = textArray[1].trim();
     let shotDistance = textArray[3].substring(0,2).trim();
@@ -242,8 +244,8 @@ async function handleMiss(id, missText, HomePlayersOnIce, VisitorPlayersOnIce, H
     let missingTeam = textArray[0].substring(0,3);
     let missingPlayerNumber = textArray[0].substring(6,8).trim();
 
-    if (missingTeam == ATeamIDdef) { missingPlayer = getPlayerName(missingPlayerNumber,VisitorPlayersOnIce, ATeamIDdef);}
-    if (missingTeam == HTeamIDdef) { missingPlayer = getPlayerName(missingPlayerNumber,HomePlayersOnIce, HTeamIDdef);}
+    if (missingTeam == ATeamIDdef) { missingPlayer = await getPlayerName(missingPlayerNumber,VisitorPlayersOnIce, ATeamIDdef);}
+    if (missingTeam == HTeamIDdef) { missingPlayer = await getPlayerName(missingPlayerNumber,HomePlayersOnIce, HTeamIDdef);}
     let shotType = textArray[1].trim();
     let shotDistance = textArray[4].substring(0,2).trim();
 }
@@ -253,8 +255,8 @@ async function handleGive(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, H
     let textArray = giveText.split('#');
     let givingTeam = textArray[0].substring(0,3);
     let playerNumber = textArray[2].substring(0,2).trim();
-    if (givingTeam == ATeamIDdef) { givingPlayer = getPlayerName(playerNumber,VisitorPlayersOnIce, ATeamIDdef);}
-    if (givingTeam == HTeamIDdef) { givingPlayer = getPlayerName(playerNumber,HomePlayersOnIce, HTeamIDdef);}
+    if (givingTeam == ATeamIDdef) { givingPlayer = await getPlayerName(playerNumber,VisitorPlayersOnIce, ATeamIDdef);}
+    if (givingTeam == HTeamIDdef) { givingPlayer = await getPlayerName(playerNumber,HomePlayersOnIce, HTeamIDdef);}
 }
 
 async function handleStop(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
@@ -270,12 +272,12 @@ async function handleBlock(id, blockText, HomePlayersOnIce, VisitorPlayersOnIce,
     let blockedPlayerNumber = textArray[0].substring(5,7).trim();
     let shotType = textArray[1].split(', ')[1];
     if (blockingTeam == ATeamIDdef) {
-        let blockingPlayer = getPlayerName(playerNumber,VisitorPlayersOnIce, ATeamIDdef);
-        let blockedPlaayer = getPlayerName(playerNumber, HomePlayersOnIce, ATeamIDdef);
+        let blockingPlayer = await getPlayerName(playerNumber,VisitorPlayersOnIce, ATeamIDdef);
+        let blockedPlaayer = await getPlayerName(playerNumber, HomePlayersOnIce, ATeamIDdef);
     }
     if (blockingTeam == HTeamIDdef) {
-        let blockingPlayer = getPlayerName(playerNumber,HomePlayersOnIce, HTeamIDdef);
-        let blockedPlaayer = getPlayerName(playerNumber, VisitorPlayersOnIce, HTeamIDdef);
+        let blockingPlayer = await getPlayerName(playerNumber,HomePlayersOnIce, HTeamIDdef);
+        let blockedPlaayer = await getPlayerName(playerNumber, VisitorPlayersOnIce, HTeamIDdef);
     }
 }
 
@@ -334,8 +336,8 @@ async function handleTakeaway(id, takeText, HomePlayersOnIce, VisitorPlayersOnIc
     let textArray = takeText.split(' - ');
     let takingTeam = textArray[0].substring(0,3);
     let takingPlayerNumber = textArray[1].substring(1,3).trim();
-    if (takingTeam == ATeamIDdef){ takingPlayer = getPlayerName(takingPlayerNumber,VisitorPlayersOnIce);}
-    if (takingTeam == HTeamIDdef){ takingPlayer = getPlayerName(takingPlayerNumber,HomePlayersOnIce);}
+    if (takingTeam == ATeamIDdef){ takingPlayer = await getPlayerName(takingPlayerNumber,VisitorPlayersOnIce);}
+    if (takingTeam == HTeamIDdef){ takingPlayer = await getPlayerName(takingPlayerNumber,HomePlayersOnIce);}
 }
 
 async function getPlayerName(number, playerArray, teamName) {
@@ -352,7 +354,7 @@ async function getPlayerName(number, playerArray, teamName) {
         let playerName = await client.query(queryString);
         if (playerName.rows[0] == undefined) {return false}
         else {
-            console.log(playerName.rows[0].name);
+            console.log("DB"+playerName.rows[0].name);
             return playerName.rows[0].name;
         }   // In some rare cases the Player isn't on the ice anymore - so we have to look in the DB
     }

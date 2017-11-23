@@ -1,27 +1,9 @@
 diff a/.idea/workspace.xml b/.idea/workspace.xml	(rejected hunks)
-@@ -17,22 +17,9 @@
+@@ -17,7 +17,6 @@
        <file leaf-file-name="scrape.js" pinned="false" current-in-tab="true">
          <entry file="file://$PROJECT_DIR$/scrape.js">
            <provider selected="true" editor-type-id="text-editor">
--            <state relative-caret-position="2322">
--              <caret line="347" column="0" lean-forward="false" selection-start-line="347" selection-start-column="0" selection-end-line="347" selection-end-column="0" />
--              <folding>
--                <element signature="e#1989#3472#0" expanded="false" />
--                <element signature="e#3539#7550#0" expanded="false" />
--                <element signature="e#7661#8936#0" expanded="false" />
--                <element signature="e#9039#10200#0" expanded="false" />
--                <element signature="e#10306#11269#0" expanded="false" />
--                <element signature="e#11374#11937#0" expanded="false" />
--                <element signature="e#12042#12464#0" expanded="false" />
--                <element signature="e#12716#13558#0" expanded="false" />
--                <element signature="e#15462#16132#0" expanded="false" />
--                <element signature="e#16241#16655#0" expanded="false" />
--                <element signature="e#17538#18647#0" expanded="false" />
--                <element signature="e#18281#18639#0" expanded="false" />
--              </folding>
-+            <state relative-caret-position="1624">
-+              <caret line="298" column="23" lean-forward="true" selection-start-line="298" selection-start-column="23" selection-end-line="298" selection-end-column="23" />
-+              <folding />
-             </state>
-           </provider>
-         </entry>
+-              <caret line="298" column="23" lean-forward="true" selection-start-line="298" selection-start-column="23" selection-end-line="298" selection-end-column="23" />
+             <state relative-caret-position="2322">
+               <caret line="347" column="0" lean-forward="false" selection-start-line="347" selection-start-column="0" selection-end-line="347" selection-end-column="0" />
+               <folding>
