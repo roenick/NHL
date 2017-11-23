@@ -32,7 +32,6 @@ class storingObj {
 //    text: 'INSERT INTO faceoff(winning_team_id, losing_team_id, play_id, winning_player_id, losing_player_id) VALUES($winningTeam, $losingTeam, $play_id, $winning_player, $losing_player)',
 //        values: {'winningTeam': winningTeam, 'losingTeam': losingTeam, 'play_id': id, 'winning_player': winningPlayer, 'losing_player': losingPlayer }
 
-
 let request = require('request');
 let cheerio = require('cheerio');
 let fs = require('fs'); // Für Testzwecke lokale Files nehmen...
@@ -104,7 +103,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
 
     let allRows = $('.evenColor');
     let lastRow = allRows.get().length;
-    for(i=33; i<35; i++) {
+    for(i=119; i<120; i++) {
         let actualRow = allRows.eq(i).find("td.bborder");
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID
@@ -122,9 +121,10 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
                 'TimeElapsed': TimeElapsed,
                 'InGameID': InGameID,
                 'EventType': EventType,
-                'Strength': Strength,
+                'Strength': Strength
             }
         };
+        console.log(query);
         //let res = await client.query(query);
 
         let VisitorPlayersOnIce = [];
@@ -140,7 +140,6 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
             VisitorPlayersOnIce.push([PlayerName,PlayerNumber,PlayerPos])
         }
 
-        // somehow we have to look at Element 30 to get Home-Players
         let HomeOnIce = actualRow.eq(7).find('table table'); // Home on ice
         for(let i=0;i<HomeOnIce.length;i++) {
             let PlayerName = HomeOnIce.eq(i).find('font').attr('title').split(" - ")[1];
@@ -166,20 +165,16 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
 
 async function handleFaceoff(id, FaceOffText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) { // 'NSH won Neu. Zone - NSH #12 FISHER vs PIT #87 CROSBY'
     let winningTeam = FaceOffText.substring(0,3);
-    let losingTeam = FaceOffText.substring(FaceOffText.search(' vs ') + 4, FaceOffText.search(' vs ') + 7);
-    let textArray = FaceOffText.split(' #');
-
-    let winningNumber = textArray[1].substring(0,2).trim(); //Das stimmt nicht!! Manchmal ist der loosing Player vorne!!
-    let losingNumber = textArray[2].substring(0,2).trim();  // Dito!!
+    if (winningTeam == HTeamIDdef) {losingTeam = ATeamIDdef} else {losingTeam = HTeamIDdef}
+    let tempString = FaceOffText.substring(3,FaceOffText.length);
+    let winningNumber = tempString.split(winningTeam)[1].substring(2,4).trim();
+    let losingNumber = tempString.split(losingTeam)[1].substring(2,4).trim();
     let winningPlayer = "";
     let losingPlayer = "";
-    console.log(HomePlayersOnIce);
-    console.log(losingNumber);
     if (winningTeam == ATeamIDdef) {
         winningPlayer = await getPlayerName(winningNumber,VisitorPlayersOnIce, ATeamIDdef);
         losingPlayer = await getPlayerName(losingNumber, HomePlayersOnIce, ATeamIDdef);
     }
-    console.log(winningTeam);
     if (winningTeam == HTeamIDdef) {
         winningPlayer = await getPlayerName(winningNumber,HomePlayersOnIce, HTeamIDdef);
         losingPlayer = await getPlayerName(losingNumber, VisitorPlayersOnIce, HTeamIDdef);
@@ -311,7 +306,7 @@ async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOn
         if (drawnTeam == HTeamIDdef) { drawnPlayer = await getPlayerName(drawnPlayerNumber,HomePlayersOnIce, HTeamIDdef);}
         penaltyObj.addData({'drawn_team_id': drawnTeam, 'drawn_player_id': drawnPlayer});
     }
-    await penaltyObj.store();
+    //await penaltyObj.store();
 }
 
 async function handleGoal(id, goalText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
