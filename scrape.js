@@ -103,7 +103,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
 
     let allRows = $('.evenColor');
     let lastRow = allRows.get().length;
-    for(i=119; i<120; i++) {
+    for(i=0; i<lastRow; i++) {
         let actualRow = allRows.eq(i).find("td.bborder");
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID
@@ -124,7 +124,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
                 'Strength': Strength
             }
         };
-        console.log(query);
+        //console.log(query);
         //let res = await client.query(query);
 
         let VisitorPlayersOnIce = [];
@@ -149,7 +149,6 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
             await updatePlayer(PlayerName,HTeamIDdef, PlayerPos, PlayerNumber, GameDate);
             HomePlayersOnIce.push([PlayerName,PlayerNumber,PlayerPos])
         }
-
         if (EventType == 'FAC') {await handleFaceoff(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
         if (EventType == 'HIT') {await handleHit(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
         if (EventType == 'SHOT') {await handleShot(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
@@ -237,8 +236,7 @@ async function handleMiss(id, missText, HomePlayersOnIce, VisitorPlayersOnIce, H
     // 'NSH #59 JOSI, Slap, Wide of Net, Off. Zone, 64 ft.'
     let textArray = missText.split(', ');
     let missingTeam = textArray[0].substring(0,3);
-    let missingPlayerNumber = textArray[0].substring(6,8).trim();
-
+    let missingPlayerNumber = textArray[0].substring(5,7).trim();
     if (missingTeam == ATeamIDdef) { missingPlayer = await getPlayerName(missingPlayerNumber,VisitorPlayersOnIce, ATeamIDdef);}
     if (missingTeam == HTeamIDdef) { missingPlayer = await getPlayerName(missingPlayerNumber,HomePlayersOnIce, HTeamIDdef);}
     let shotType = textArray[1].trim();
@@ -315,15 +313,30 @@ async function handleGoal(id, goalText, HomePlayersOnIce, VisitorPlayersOnIce, H
     let textArray = goalText.split(", ");
     let goalTeam = textArray[0].substring(0,3);
     let goalScorerNumber = textArray[0].substring(5,7).trim();
+    let goalPlayerId ="";
+    if (goalTeam == ATeamIDdef) {goalPlayerId = await getPlayerName(goalScorerNumber, VisitorPlayersOnIce, ATeamIDdef);}
+    if (goalTeam == HTeamIDdef) {goalPlayerId = await getPlayerName(goalScorerNumber, HomePlayersOnIce, HTeamIDdef);}
     let shotType = textArray[1];
     let shotDistance = textArray[3].substring(0,3).trim();
+    const goalObj = new storingObj('goal', Client);
+    goalObj.addData({'player_id': goalPlayerId, 'distance':shotDistance, 'team_id':goalTeam, 'shot_type':shotType, 'play_id':id});
+    //await goalObj.store();
+
     let assistsTextArray = textArray[3].split("#");
     let assistsObj= {playID: id, team: goalTeam, assists : []};
     for (let i=1; i<assistsTextArray.length;i++) {
-        assistsObj.assists.push(assistsTextArray[i].substring(0,2).trim());
+        let assistPlayerId ="";
+        let assistPlayerNumber = assistsTextArray[i].substring(0,2).trim();
+        if (goalTeam == ATeamIDdef) {assistPlayerId = await getPlayerName(assistPlayerNumber, VisitorPlayersOnIce, ATeamIDdef);}
+        if (goalTeam == HTeamIDdef) {assistPlayerId = await getPlayerName(assistPlayerNumber, HomePlayersOnIce, HTeamIDdef);}
+        let assistObj = new storingObj('assist', Client);
+        let assistType = "";
+        if (i==1) assistType = "first";
+        if (i==2) assistType = "second";
+        console.log(id);
+        assistObj.addData({'team_id': goalTeam, 'type': assistType, 'play_id': id, 'player_id': assistPlayerId});
+        //await assistObj.store();
     }
-    // store the goal
-
 }
 
 async function handleTakeaway(id, takeText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
@@ -340,16 +353,15 @@ async function getPlayerName(number, playerArray, teamName) {
     for (var i = 0; i < playerArray.length; i++) {
         if (playerArray[i][1] == number) {
             found = true;
-            console.log("found: " + playerArray[i][0])
             return playerArray[i][0];   // Found it
         }
     }
     if (found == false) {
         let queryString = "SELECT name FROM player WHERE number = " + number + " AND actual_team_id ='" + teamName + "'";
+
         let playerName = await client.query(queryString);
         if (playerName.rows[0] == undefined) {return false}
         else {
-            console.log("DB"+playerName.rows[0].name);
             return playerName.rows[0].name;
         }   // In some rare cases the Player isn't on the ice anymore - so we have to look in the DB
     }
