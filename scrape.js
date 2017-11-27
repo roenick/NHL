@@ -124,7 +124,6 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
                 'Strength': Strength
             }
         };
-        //console.log(query);
         //let res = await client.query(query);
 
         let VisitorPlayersOnIce = [];
@@ -153,7 +152,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
         if (EventType == 'HIT') {await handleHit(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
         if (EventType == 'SHOT') {await handleShot(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
         if (EventType == 'MISS') {await handleMiss(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
-        if (EventType == 'GIVE') {await handleGive(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+        if (EventType == 'GIVE') {await handleGiveaway(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
         if (EventType == 'STOP') {await handleStop(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
         if (EventType == 'BLOCK') {await handleBlock(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
         if (EventType == 'PENL') {await handlePenalty(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
@@ -178,12 +177,9 @@ async function handleFaceoff(id, FaceOffText, HomePlayersOnIce, VisitorPlayersOn
         winningPlayer = await getPlayerName(winningNumber,HomePlayersOnIce, HTeamIDdef);
         losingPlayer = await getPlayerName(losingNumber, VisitorPlayersOnIce, HTeamIDdef);
     }
-    let query = {
-        text: 'INSERT INTO faceoff(winning_team_id, losing_team_id, play_id, winning_player_id, losing_player_id) VALUES($winningTeam, $losingTeam, $play_id, $winning_player, $losing_player)',
-        values: {'winningTeam': winningTeam, 'losingTeam': losingTeam, 'play_id': id, 'winning_player': winningPlayer, 'losing_player': losingPlayer }
-    };
-
-    //let res = await client.query(query);
+    let faceoffObj = new storingObj('faceoff', Client);
+    faceoffObj.addData({'winning_team_id': winningTeam, 'losing_team_id': losingTeam, 'play_id': id, 'winning_player_id': winningPlayer, 'losing_player_id': losingPlayer});
+    //await faceoffObj.store();
 }
 
 async function handleHit(id, hitText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) { // 'NSH #9 FORSBERG HIT PIT #17 RUST, Neu. Zone'
@@ -203,13 +199,9 @@ async function handleHit(id, hitText, HomePlayersOnIce, VisitorPlayersOnIce, HTe
         hittingPlayer = await getPlayerName(hittingNumber, HomePlayersOnIce, HTeamIDdef);
         hittedPlayer = await getPlayerName(hittedNumber, VisitorPlayersOnIce, HTeamIDdef);
     }
-
-    let query = {
-        text: 'INSERT INTO hit(hitter_id, hitted_id, hitter_team_id, hitted_team_id, play_id) VALUES($hitter, $hitted, $hitter_team, $hitted_team, $play_id)',
-        values: {'hitter': hittingPlayer, 'hitted': hittedPlayer, 'hitter_team': hittingTeam, 'hitted_team': hittedTeam, 'play_id': id }
-    };
-
-    //let res = await client.query(query);
+    let hitObj = new storingObj('hit', Client);
+    hitObj.addData({'hitter_id': hittingPlayer, 'hitted_id': hittedPlayer, 'hitter_team_id': hittingTeam, 'hitted_team_id': hittedTeam, 'play_id': id});
+    //await hitObj.store();
 }
 
 async function handleShot(id, shootText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) { // 'PIT ONGOAL - #37 ROWNEY, Slap, Off. Zone, 31 ft.'
@@ -224,12 +216,9 @@ async function handleShot(id, shootText, HomePlayersOnIce, VisitorPlayersOnIce, 
     let shotType = textArray[1].trim();
     let shotDistance = textArray[3].substring(0,2).trim();
 
-    let query = {
-        text: 'INSERT INTO shot(player_id, distance, shot_type, team_id, play_id) VALUES($playerId, $dist, $shotType, $teamId, $playId)',
-        values: {'playerId': shootingPlayer, 'dist': shotDistance, 'shotType': shotType, 'teamId': shootingTeam, 'playId': id }
-    };
-
-    //let res = await client.query(query);
+    let shotObj = new storingObj('shot', Client);
+    shotObj.addData({'player_id': shootingPlayer, 'distance': shotDistance, 'shot_type': shotType, 'team_id': shootingTeam, 'play_id': id});
+    //await shotObj.store();
 }
 
 async function handleMiss(id, missText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
@@ -241,15 +230,23 @@ async function handleMiss(id, missText, HomePlayersOnIce, VisitorPlayersOnIce, H
     if (missingTeam == HTeamIDdef) { missingPlayer = await getPlayerName(missingPlayerNumber,HomePlayersOnIce, HTeamIDdef);}
     let shotType = textArray[1].trim();
     let shotDistance = textArray[4].substring(0,2).trim();
+
+    let missObj = new storingObj('miss', Client);
+    missObj.addData({'player_id': missingPlayer, 'distance': shotDistance, 'team_id': missingTeam, 'shot_type': shotType, 'play_id': id});
+    await missObj.store();
 }
 
-async function handleGive(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
+async function handleGiveaway(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
     // 'PIT GIVEAWAY - #3 MAATTA, Def. Zone '
     let textArray = giveText.split('#');
     let givingTeam = textArray[0].substring(0,3);
     let playerNumber = textArray[2].substring(0,2).trim();
     if (givingTeam == ATeamIDdef) { givingPlayer = await getPlayerName(playerNumber,VisitorPlayersOnIce, ATeamIDdef);}
     if (givingTeam == HTeamIDdef) { givingPlayer = await getPlayerName(playerNumber,HomePlayersOnIce, HTeamIDdef);}
+
+    let giveawayObj = new storingObj('giveaway', Client);
+    giveawayObj.addData({'player_id': givingPlayer, 'team_id': givingTeam, 'play_id': id});
+    await giveawayObj.store();
 }
 
 async function handleStop(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
@@ -264,6 +261,8 @@ async function handleBlock(id, blockText, HomePlayersOnIce, VisitorPlayersOnIce,
     let blockingPlayerNumber = textArray[1].substring(6,8).trim();
     let blockedPlayerNumber = textArray[0].substring(5,7).trim();
     let shotType = textArray[1].split(', ')[1];
+    let blockingPlayer = '';
+    let blockedPlayer = '';
     if (blockingTeam == ATeamIDdef) {
         let blockingPlayer = await getPlayerName(playerNumber,VisitorPlayersOnIce, ATeamIDdef);
         let blockedPlaayer = await getPlayerName(playerNumber, HomePlayersOnIce, ATeamIDdef);
@@ -272,6 +271,10 @@ async function handleBlock(id, blockText, HomePlayersOnIce, VisitorPlayersOnIce,
         let blockingPlayer = await getPlayerName(playerNumber,HomePlayersOnIce, HTeamIDdef);
         let blockedPlaayer = await getPlayerName(playerNumber, VisitorPlayersOnIce, HTeamIDdef);
     }
+
+    let blockObj = new storingObj('block', Client);
+    blockObj.addData({'player_who_blocked_id': blockingPlayer, 'player_got_blocked_id': blockedPlayer, 'blocked_team_id': blockedTeam, 'blocking_team_id': blockingTeam, 'play_id': id, 'shot_type': shotType});
+    await blockObj.store();
 }
 
 async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
@@ -323,7 +326,7 @@ async function handleGoal(id, goalText, HomePlayersOnIce, VisitorPlayersOnIce, H
     //await goalObj.store();
 
     let assistsTextArray = textArray[3].split("#");
-    let assistsObj= {playID: id, team: goalTeam, assists : []};
+    //let assistsObj= {playID: id, team: goalTeam, assists : []};
     for (let i=1; i<assistsTextArray.length;i++) {
         let assistPlayerId ="";
         let assistPlayerNumber = assistsTextArray[i].substring(0,2).trim();
@@ -333,7 +336,6 @@ async function handleGoal(id, goalText, HomePlayersOnIce, VisitorPlayersOnIce, H
         let assistType = "";
         if (i==1) assistType = "first";
         if (i==2) assistType = "second";
-        console.log(id);
         assistObj.addData({'team_id': goalTeam, 'type': assistType, 'play_id': id, 'player_id': assistPlayerId});
         //await assistObj.store();
     }
@@ -346,6 +348,11 @@ async function handleTakeaway(id, takeText, HomePlayersOnIce, VisitorPlayersOnIc
     let takingPlayerNumber = textArray[1].substring(1,3).trim();
     if (takingTeam == ATeamIDdef){ takingPlayer = await getPlayerName(takingPlayerNumber,VisitorPlayersOnIce);}
     if (takingTeam == HTeamIDdef){ takingPlayer = await getPlayerName(takingPlayerNumber,HomePlayersOnIce);}
+
+    let takeawayObj = new storingObj('takeaway', Client);
+    takeawayObj.addData({'player_id': takingPlayer, 'team_id': takingTeam, 'play_id': id});
+    await takeawayObj.store();
+
 }
 
 async function getPlayerName(number, playerArray, teamName) {
