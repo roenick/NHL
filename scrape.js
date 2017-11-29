@@ -256,7 +256,7 @@ async function handleStop(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, H
 async function handleBlock(id, blockText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
     // 'PIT #17 RUST BLOCKED BY NSH #14 EKHOLM, Wrist, Def. Zone'
     let textArray = blockText.split(' BY ');
-    let blockingTeam = textArray[1].substring(0,3);
+    let blockingTeam = textArray[1].substring(1,4);
     let blockedTeam = textArray[0].substring(0,3);
     let blockingPlayerNumber = textArray[1].substring(6,8).trim();
     let blockedPlayerNumber = textArray[0].substring(5,7).trim();
@@ -264,14 +264,13 @@ async function handleBlock(id, blockText, HomePlayersOnIce, VisitorPlayersOnIce,
     let blockingPlayer = '';
     let blockedPlayer = '';
     if (blockingTeam == ATeamIDdef) {
-        let blockingPlayer = await getPlayerName(playerNumber,VisitorPlayersOnIce, ATeamIDdef);
-        let blockedPlaayer = await getPlayerName(playerNumber, HomePlayersOnIce, ATeamIDdef);
+        blockingPlayer = await getPlayerName(blockingPlayerNumber,VisitorPlayersOnIce, ATeamIDdef);
+        blockedPlayer = await getPlayerName(blockedPlayerNumber, HomePlayersOnIce, HTeamIDdef);
     }
     if (blockingTeam == HTeamIDdef) {
-        let blockingPlayer = await getPlayerName(playerNumber,HomePlayersOnIce, HTeamIDdef);
-        let blockedPlaayer = await getPlayerName(playerNumber, VisitorPlayersOnIce, HTeamIDdef);
+         blockingPlayer = await getPlayerName(blockingPlayerNumber,HomePlayersOnIce, HTeamIDdef);
+         blockedPlayer = await getPlayerName(blockedPlayerNumber, VisitorPlayersOnIce, ATeamIDdef);
     }
-
     let blockObj = new storingObj('block', Client);
     blockObj.addData({'player_who_blocked_id': blockingPlayer, 'player_got_blocked_id': blockedPlayer, 'blocked_team_id': blockedTeam, 'blocking_team_id': blockingTeam, 'play_id': id, 'shot_type': shotType});
     await blockObj.store();
