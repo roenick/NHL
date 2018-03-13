@@ -56,7 +56,7 @@ named.patch(client);
 
 await client.connect();
 
-$ = cheerio.load(fs.readFileSync('PlayByPlay.htm'));
+$ = cheerio.load(fs.readFileSync('PlayByPlay2.htm'));
 
 /*
 // Files: http://www.nhl.com/scores/htmlreports/20162017/PL02001 bis PL021230.HTM
@@ -67,6 +67,12 @@ request('http://www.nhl.com/scores/htmlreports/20162017/PL030411.HTM', function 
      }
 });
 */
+
+// Remove a game and all associated Plays from DB
+async function removeGameFromDB(gameID) {
+
+    await client.query(`DELETE FROM game WHERE id = ${gameID}`);
+}
 
 async function storeGameDetails() {
     let ATeam = $('#Visitor td').last().html().split("<br>")[0];
@@ -110,6 +116,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
     let allRows = $('.evenColor');
     let lastRow = allRows.get().length;
     for(i=0; i<lastRow; i++) {
+    //for (i=9; i<10; i++) { //just to test one row
         let actualRow = allRows.eq(i).find("td.bborder");
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID;
@@ -130,8 +137,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
                 'Strength': Strength
             }
         };
-        //let res = await client.query(query);
-
+        let res = await client.query(query);
         let VisitorPlayersOnIce = [];
         let HomePlayersOnIce = [];
         let GameDate = new Date(GDate);
@@ -185,7 +191,7 @@ async function handleFaceoff(id, FaceOffText, HomePlayersOnIce, VisitorPlayersOn
     }
     let faceoffObj = new storingObj('faceoff', Client);
     faceoffObj.addData({'winning_team_id': winningTeam, 'losing_team_id': losingTeam, 'play_id': id, 'winning_player_id': winningPlayer, 'losing_player_id': losingPlayer});
-    //await faceoffObj.store();
+    await faceoffObj.store();
 }
 
 async function handleHit(id, hitText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) { // 'NSH #9 FORSBERG HIT PIT #17 RUST, Neu. Zone'
@@ -207,7 +213,7 @@ async function handleHit(id, hitText, HomePlayersOnIce, VisitorPlayersOnIce, HTe
     }
     let hitObj = new storingObj('hit', Client);
     hitObj.addData({'hitter_id': hittingPlayer, 'hitted_id': hittedPlayer, 'hitter_team_id': hittingTeam, 'hitted_team_id': hittedTeam, 'play_id': id});
-    //await hitObj.store();
+    await hitObj.store();
 }
 
 async function handleShot(id, shootText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) { // 'PIT ONGOAL - #37 ROWNEY, Slap, Off. Zone, 31 ft.'
@@ -224,7 +230,7 @@ async function handleShot(id, shootText, HomePlayersOnIce, VisitorPlayersOnIce, 
 
     let shotObj = new storingObj('shot', Client);
     shotObj.addData({'player_id': shootingPlayer, 'distance': shotDistance, 'shot_type': shotType, 'team_id': shootingTeam, 'play_id': id});
-    //await shotObj.store();
+    await shotObj.store();
 }
 
 async function handleMiss(id, missText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
@@ -312,7 +318,7 @@ async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOn
         if (drawnTeam === HTeamIDdef) { drawnPlayer = await getPlayerName(drawnPlayerNumber,HomePlayersOnIce, HTeamIDdef);}
         penaltyObj.addData({'drawn_team_id': drawnTeam, 'drawn_player_id': drawnPlayer});
     }
-    //await penaltyObj.store();
+    await penaltyObj.store();
 }
 
 async function handleGoal(id, goalText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
@@ -342,7 +348,7 @@ async function handleGoal(id, goalText, HomePlayersOnIce, VisitorPlayersOnIce, H
         if (i===1) assistType = "first";
         if (i===2) assistType = "second";
         assistObj.addData({'team_id': goalTeam, 'type': assistType, 'play_id': id, 'player_id': assistPlayerId});
-        //await assistObj.store();
+        await assistObj.store();
     }
 }
 
@@ -365,7 +371,8 @@ async function getPlayerName(number, playerArray, teamName) {
     for (let i = 0; i < playerArray.length; i++) {
         if (playerArray[i][1] === number) {
             found = true;
-            return playerArray[i][0];   // Found it
+            name = playerArray[i][0]; // Found it
+            return name.replace("'","");
         }
     }
     if (found === false) {
@@ -380,6 +387,7 @@ async function getPlayerName(number, playerArray, teamName) {
 }
 
 async function updatePlayer(name, team, position, number, GameDate) {  // looks if Player is in DB and updates it if necessary
+    name = name.replace("'",""); // for example O'Gara has "'" I just delete it for now...
     let result = await client.query(`SELECT * FROM player WHERE name = '${name}' limit 1`);
     //let result = null;
     if (result === null || result.rowCount === 0 ) {   //Player not yet in the DB
@@ -396,18 +404,14 @@ async function updatePlayer(name, team, position, number, GameDate) {  // looks 
                 text: 'UPDATE player SET actual_team_id = $team, date = $GDate WHERE id = $id',
                 values: {'team': team, 'GDate': GameDate.toDateString(), 'id': result.rows[0].id}
             };
-            //let res = await client.query(query2)
+            let res = await client.query(query2)
         }
     }
 }
 
-//await updatePlayer('MATTHEW MURRAY','PIT','G', 30, new Date('SATURDAY, November 18, 2017'));
-//await storeGameDetails();
+await removeGameFromDB("100001063");
+await storeGameDetails();
 
-await client.query("SELECT id FROM team WHERE full_name_big = '"+ HTeam +"'");
-
-//await storePlay();
-//await testPlayerInsertion();
 
 await client.end();
 
