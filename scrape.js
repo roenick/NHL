@@ -118,8 +118,8 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
 
     let allRows = $('.evenColor');
     let lastRow = allRows.get().length;
-    for(i=0; i<lastRow; i++) {
-    //for (i=118; i<119; i++) { //just to test one row
+    //for(i=0; i<lastRow; i++) {
+    for (i=119; i<120; i++) { //just to test one row
         let actualRow = allRows.eq(i).find("td.bborder");
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID;
@@ -313,7 +313,7 @@ async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOn
             penaltyString = penaltyString + textArray[1].substring(i, i + 1);
             i++
         }
-        let penaltyDuration = textArray[1].substring(i + 1, i + 3).trim();
+        let penaltyDuration = /\([0-9]+ /.exec(textArray[1])[0].substring(1);
         let drawnText = penaltyText.split(": ");
         let drawnTeam = "";
         let drawnPlayerNumber = "";
@@ -431,7 +431,6 @@ async function updatePlayer(name, team, position, number, GameDate) {  // looks 
     }
 }
 
-await removeGameFromDB("100001063")
 await storeGameDetails();
 
 
