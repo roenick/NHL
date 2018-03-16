@@ -56,7 +56,7 @@ named.patch(client);
 
 await client.connect();
 
-$ = cheerio.load(fs.readFileSync('PlayByPlay2.htm'));
+$ = cheerio.load(fs.readFileSync('3.htm'));
 
 /*
 // Files: http://www.nhl.com/scores/htmlreports/20162017/PL02001 bis PL021230.HTM
@@ -86,11 +86,14 @@ async function storeGameDetails() {
     let GDate = GameInfo.eq(-5).text().replace(/(\n)/gm,"");
 
     let GType = GameInfo.eq(-6).text().replace(/(\n)/gm,"");
-    let GSeason = 2016;
+    let GSeason = 2017;
     let HTeamID = await client.query("SELECT id FROM team WHERE full_name_big = '"+ HTeam +"'");
     let ATeamID = await client.query("SELECT id FROM team WHERE full_name_big = '"+ ATeam +"'");
     let HTeamIDdef = HTeamID.rows[0].id;
     let ATeamIDdef = ATeamID.rows[0].id;
+
+    //remove Game from DB first (if exists...)
+    await removeGameFromDB(GameID);
 
     let query = {
         text: 'INSERT INTO game VALUES($GameID, $HTeam, $ATeam, $HScore, $AScore, $GType, $GDate, $GFinishedIn, $GSeason)',
@@ -116,7 +119,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
     let allRows = $('.evenColor');
     let lastRow = allRows.get().length;
     for(i=0; i<lastRow; i++) {
-    //for (i=9; i<10; i++) { //just to test one row
+    //for (i=118; i<119; i++) { //just to test one row
         let actualRow = allRows.eq(i).find("td.bborder");
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID;
@@ -291,34 +294,52 @@ async function handleBlock(id, blockText, HomePlayersOnIce, VisitorPlayersOnIce,
 async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
     // 'NSH #76 SUBBAN&#xA0;Delaying Game-Puck over glass(2 min), Def. Zone'
     // PIT #71 MALKIN&#xA0;Slashing(2 min), Neu. Zone Drawn By: NSH #76 SUBBAN
+    // Ausnahme: Teampenalty:
+    // TOR TEAM&#xA0;Too many men/ice - bench(2 min) Served By: #16 MARNER (aktuell werden diese ignoriert)
     let textArray = penaltyText.split(";");
     let penaltyTeam = textArray[0].substring(0,3).trim();
     let penaltyPlayerNumber = textArray[0].substring(5,7).trim();
     let penaltyPlayer = "";
-    if (penaltyTeam === ATeamIDdef) { penaltyPlayer = await getPlayerName(penaltyPlayerNumber,VisitorPlayersOnIce);}
-    if (penaltyTeam === HTeamIDdef) { penaltyPlayer = await getPlayerName(penaltyPlayerNumber,HomePlayersOnIce);}
-    let i = 0;
-    let penaltyString = "";
-    while (! (textArray[1].substring(i,i+1)==="(")) {
-        penaltyString = penaltyString + textArray[1].substring(i,i+1);
-        i++
-    }
-    let penaltyDuration = textArray[1].substring(i+1,i+3).trim();
-    let drawnText = penaltyText.split(": ");
-    let drawnTeam = "";
-    let drawnPlayerNumber = "";
-    let drawnPlayer = "";
-    const penaltyObj = new storingObj('penalty', Client);
-    penaltyObj.addData({'length': penaltyDuration, player_id: penaltyPlayer, reason: penaltyString, team_id: penaltyTeam, play_id: id});
+    if (penaltyPlayerNumber != "EA") { // If PlayerNumber is "EA" it's a TeamPenalty (ignored)
+        if (penaltyTeam === ATeamIDdef) {
+            penaltyPlayer = await getPlayerName(penaltyPlayerNumber, VisitorPlayersOnIce);
+        }
+        if (penaltyTeam === HTeamIDdef) {
+            penaltyPlayer = await getPlayerName(penaltyPlayerNumber, HomePlayersOnIce);
+        }
+        let i = 0;
+        let penaltyString = "";
+        while (!(textArray[1].substring(i, i + 1) === "(")) {
+            penaltyString = penaltyString + textArray[1].substring(i, i + 1);
+            i++
+        }
+        let penaltyDuration = textArray[1].substring(i + 1, i + 3).trim();
+        let drawnText = penaltyText.split(": ");
+        let drawnTeam = "";
+        let drawnPlayerNumber = "";
+        let drawnPlayer = "";
+        const penaltyObj = new storingObj('penalty', Client);
+        penaltyObj.addData({
+            'length': penaltyDuration,
+            player_id: penaltyPlayer,
+            reason: penaltyString,
+            team_id: penaltyTeam,
+            play_id: id
+        });
 
-    if (! (drawnText[1]===undefined)) {
-        drawnTeam = drawnText[1].substring(0, 3);
-        drawnPlayerNumber = drawnText[1].substring(5, 7).trim();
-        if (drawnTeam === ATeamIDdef) { drawnPlayer = await getPlayerName(drawnPlayerNumber,VisitorPlayersOnIce, ATeamIDdef);}
-        if (drawnTeam === HTeamIDdef) { drawnPlayer = await getPlayerName(drawnPlayerNumber,HomePlayersOnIce, HTeamIDdef);}
-        penaltyObj.addData({'drawn_team_id': drawnTeam, 'drawn_player_id': drawnPlayer});
+        if (!(drawnText[1] === undefined)) {
+            drawnTeam = drawnText[1].substring(0, 3);
+            drawnPlayerNumber = drawnText[1].substring(5, 7).trim();
+            if (drawnTeam === ATeamIDdef) {
+                drawnPlayer = await getPlayerName(drawnPlayerNumber, VisitorPlayersOnIce, ATeamIDdef);
+            }
+            if (drawnTeam === HTeamIDdef) {
+                drawnPlayer = await getPlayerName(drawnPlayerNumber, HomePlayersOnIce, HTeamIDdef);
+            }
+            penaltyObj.addData({'drawn_team_id': drawnTeam, 'drawn_player_id': drawnPlayer});
+        }
+        await penaltyObj.store();
     }
-    await penaltyObj.store();
 }
 
 async function handleGoal(id, goalText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
@@ -332,12 +353,13 @@ async function handleGoal(id, goalText, HomePlayersOnIce, VisitorPlayersOnIce, H
     if (goalTeam === HTeamIDdef) {goalPlayerId = await getPlayerName(goalScorerNumber, HomePlayersOnIce, HTeamIDdef);}
     let shotType = textArray[1];
     let shotDistance = textArray[3].substring(0,3).trim();
+    if (shotDistance.slice(-1)=="f") {shotDistance=shotDistance.substring(0,1)} //If Distance < 10 shotDistance is "8 f"
+
     const goalObj = new storingObj('goal', Client);
     goalObj.addData({'player_id': goalPlayerId, 'distance':shotDistance, 'team_id':goalTeam, 'shot_type':shotType, 'play_id':id});
-    //await goalObj.store();
+    await goalObj.store();
 
     let assistsTextArray = textArray[3].split("#");
-    //let assistsObj= {playID: id, team: goalTeam, assists : []};
     for (let i=1; i<assistsTextArray.length;i++) {
         let assistPlayerId ="";
         let assistPlayerNumber = assistsTextArray[i].substring(0,2).trim();
@@ -409,7 +431,7 @@ async function updatePlayer(name, team, position, number, GameDate) {  // looks 
     }
 }
 
-await removeGameFromDB("100001063");
+await removeGameFromDB("100001063")
 await storeGameDetails();
 
 
