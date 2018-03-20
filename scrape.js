@@ -14,6 +14,9 @@ class storingObj {
        }
     }
 
+    clearData() { // clears Data
+        this.data = {};
+    }
     async store() {
         let queryText = "INSERT INTO " + this.table + "(";
         let valuesObj = {};
@@ -56,7 +59,7 @@ named.patch(client);
 
 await client.connect();
 
-$ = cheerio.load(fs.readFileSync('3.htm'));
+$ = cheerio.load(fs.readFileSync('1.htm'));
 
 /*
 // Files: http://www.nhl.com/scores/htmlreports/20162017/PL02001 bis PL021230.HTM
@@ -70,7 +73,6 @@ request('http://www.nhl.com/scores/htmlreports/20162017/PL030411.HTM', function 
 
 // Remove a game and all associated Plays from DB
 async function removeGameFromDB(gameID) {
-
     await client.query(`DELETE FROM game WHERE id = ${gameID}`);
 }
 
@@ -118,8 +120,8 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
 
     let allRows = $('.evenColor');
     let lastRow = allRows.get().length;
-    for(i=0; i<lastRow; i++) {
-    //for (i=119; i<120; i++) { //just to test one row
+    //for(i=0; i<lastRow; i++) {
+    for (i=147; i<148; i++) { //just to test one row
         let actualRow = allRows.eq(i).find("td.bborder");
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID;
@@ -127,7 +129,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
         let Strength = actualRow.eq(2).text(); //Strength in third td (if this is empty its a STOP-Event
         let TimeElapsed = "00:" + actualRow.eq(3).html().split("<br>")[0]; //TimeElapsed in fourth td
         let EventType = actualRow.eq(4).text(); // Event-Name
-        // Now we store those common things in table 'play'
+        // Now lets store those common things in table 'play'
         let query = {
             text: 'INSERT INTO play VALUES($ID, $GameID, $Period, $TimeElapsed, $InGameID, $EventType, $Strength)',
             values: {
@@ -163,6 +165,9 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
             await updatePlayer(PlayerName,HTeamIDdef, PlayerPos, PlayerNumber, GameDate);
             HomePlayersOnIce.push([PlayerName,PlayerNumber,PlayerPos])
         }
+        await storeOnIce(HomePlayersOnIce, HTeamIDdef, ID);
+        await storeOnIce(VisitorPlayersOnIce, ATeamIDdef, ID);
+
         if (EventType === 'FAC') {await handleFaceoff(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
         if (EventType === 'HIT') {await handleHit(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
         if (EventType === 'SHOT') {await handleShot(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
@@ -173,6 +178,17 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
         if (EventType === 'PENL') {await handlePenalty(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
         if (EventType === 'GOAL') {await handleGoal(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
         if (EventType === 'TAKE') {await handleTakeaway(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+    }
+}
+
+async function storeOnIce(playerArray, Team, PlayID) {
+    let onIceObj = new storingObj('on_ice', Client);
+    let arrayLength = playerArray.length;
+    for (let i=0; i<arrayLength;i++) {
+        playerData = playerArray[i];
+        onIceObj.addData({'team_id': Team, 'play_id':PlayID, 'position':playerData[2], 'player_id':playerData[0], 'number':playerData[1]});
+        await onIceObj.store();
+        onIceObj.clearData();
     }
 }
 
@@ -264,8 +280,11 @@ async function handleGiveaway(id, giveText, HomePlayersOnIce, VisitorPlayersOnIc
     await giveawayObj.store();
 }
 
-async function handleStop(id, giveText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
+async function handleStop(id, stopText) {
     // 'PUCK IN CROWD,TV TIMEOUT' ??
+    const stopObj = new storingObj('start_stop', Client);
+    stopObj.addData({'what': stopText, 'play_id': id});
+    await stopObj.store();
 }
 
 async function handleBlock(id, blockText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
@@ -300,6 +319,14 @@ async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOn
     let penaltyTeam = textArray[0].substring(0,3).trim();
     let penaltyPlayerNumber = textArray[0].substring(5,7).trim();
     let penaltyPlayer = "";
+    let penaltyDuration = /\([0-9]+ /.exec(textArray[1])[0].substring(1);
+    let penaltyString = "";
+    let i = 0;
+    while (!(textArray[1].substring(i, i + 1) === "(")) {
+        penaltyString = penaltyString + textArray[1].substring(i, i + 1);
+        i++
+    }
+    const penaltyObj = new storingObj('penalty', Client);
     if (penaltyPlayerNumber != "EA") { // If PlayerNumber is "EA" it's a TeamPenalty (ignored)
         if (penaltyTeam === ATeamIDdef) {
             penaltyPlayer = await getPlayerName(penaltyPlayerNumber, VisitorPlayersOnIce);
@@ -308,17 +335,10 @@ async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOn
             penaltyPlayer = await getPlayerName(penaltyPlayerNumber, HomePlayersOnIce);
         }
         let i = 0;
-        let penaltyString = "";
-        while (!(textArray[1].substring(i, i + 1) === "(")) {
-            penaltyString = penaltyString + textArray[1].substring(i, i + 1);
-            i++
-        }
-        let penaltyDuration = /\([0-9]+ /.exec(textArray[1])[0].substring(1);
         let drawnText = penaltyText.split(": ");
         let drawnTeam = "";
         let drawnPlayerNumber = "";
         let drawnPlayer = "";
-        const penaltyObj = new storingObj('penalty', Client);
         penaltyObj.addData({
             'length': penaltyDuration,
             player_id: penaltyPlayer,
@@ -338,6 +358,16 @@ async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOn
             }
             penaltyObj.addData({'drawn_team_id': drawnTeam, 'drawn_player_id': drawnPlayer});
         }
+        await penaltyObj.store();
+    }
+    if (penaltyPlayerNumber == "EA") { //Exception-Case: Team Penalty
+        penaltyObj.addData({
+            'length': penaltyDuration,
+            player_id: "TEAMPLAYER", //Special virtual Player..
+            reason: penaltyString,
+            team_id: penaltyTeam,
+            play_id: id
+        });
         await penaltyObj.store();
     }
 }
@@ -431,8 +461,8 @@ async function updatePlayer(name, team, position, number, GameDate) {  // looks 
     }
 }
 
-await storeGameDetails();
 
+await storeGameDetails();
 
 await client.end();
 
