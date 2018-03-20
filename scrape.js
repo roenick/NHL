@@ -120,7 +120,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
     let allRows = $('.evenColor');
     let lastRow = allRows.get().length;
     for(i=0; i<lastRow; i++) {
-    //for (i=147; i<148; i++) { //just to test one row
+    //for (i=306; i<307; i++) { //just to test one row
         let actualRow = allRows.eq(i).find("td.bborder");
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID;
@@ -195,7 +195,6 @@ async function handleFaceoff(id, FaceOffText, HomePlayersOnIce, VisitorPlayersOn
     let winningTeam = FaceOffText.substring(0,3);
     if (winningTeam === HTeamIDdef) {losingTeam = ATeamIDdef} else {losingTeam = HTeamIDdef}
     let tempString = FaceOffText.substring(3,FaceOffText.length);
-    console.log(tempString);
     let winningNumber = tempString.split(winningTeam)[1].substring(2,4).trim();
     let losingNumber = tempString.split(losingTeam)[1].substring(2,4).trim();
     let winningPlayer = "";
@@ -294,7 +293,10 @@ async function handleBlock(id, blockText, HomePlayersOnIce, VisitorPlayersOnIce,
     let blockedTeam = textArray[0].substring(0,3);
     let blockingPlayerNumber = textArray[1].substring(6,8).trim();
     let blockedPlayerNumber = textArray[0].substring(5,7).trim();
-    let shotType = textArray[1].split(', ')[1];
+    let shotType = "";
+    if (textArray[1].split(', ').length>2) { // If length of this array is 2 then the shotType is missing
+        shotType = textArray[1].split(', ')[1]; // otherwise the shotType ist the 2nd Element
+    }
     let blockingPlayer = '';
     let blockedPlayer = '';
     if (blockingTeam === ATeamIDdef) {
