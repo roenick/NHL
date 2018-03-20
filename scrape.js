@@ -59,11 +59,10 @@ named.patch(client);
 
 await client.connect();
 
-$ = cheerio.load(fs.readFileSync('1.htm'));
+$ = cheerio.load(fs.readFileSync('4.htm'));
 
 /*
-// Files: http://www.nhl.com/scores/htmlreports/20162017/PL02001 bis PL021230.HTM
-
+// Files: http://www.nhl.com/scores/htmlreports/20172018/PL020006.HTM
 request('http://www.nhl.com/scores/htmlreports/20162017/PL030411.HTM', function (error, response, html) {
      if (!error && response.statusCode == 200) {
          var $ = cheerio.load(html);
@@ -120,8 +119,8 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
 
     let allRows = $('.evenColor');
     let lastRow = allRows.get().length;
-    //for(i=0; i<lastRow; i++) {
-    for (i=147; i<148; i++) { //just to test one row
+    for(i=0; i<lastRow; i++) {
+    //for (i=147; i<148; i++) { //just to test one row
         let actualRow = allRows.eq(i).find("td.bborder");
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID;
@@ -196,6 +195,7 @@ async function handleFaceoff(id, FaceOffText, HomePlayersOnIce, VisitorPlayersOn
     let winningTeam = FaceOffText.substring(0,3);
     if (winningTeam === HTeamIDdef) {losingTeam = ATeamIDdef} else {losingTeam = HTeamIDdef}
     let tempString = FaceOffText.substring(3,FaceOffText.length);
+    console.log(tempString);
     let winningNumber = tempString.split(winningTeam)[1].substring(2,4).trim();
     let losingNumber = tempString.split(losingTeam)[1].substring(2,4).trim();
     let winningPlayer = "";
@@ -461,7 +461,7 @@ async function updatePlayer(name, team, position, number, GameDate) {  // looks 
     }
 }
 
-
+//await removeGameFromDB('100000004');
 await storeGameDetails();
 
 await client.end();
