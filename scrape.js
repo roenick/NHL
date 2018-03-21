@@ -34,7 +34,6 @@ class storingObj {
         }
         queryText = queryText.slice(0,-2) + ")";
         let query = {text: queryText, values: valuesObj};
-        console.log(query);
         let res = await client.query(query);
     }
 }
@@ -59,7 +58,7 @@ named.patch(client);
 
 await client.connect();
 
-$ = cheerio.load(fs.readFileSync('11.htm'));
+$ = cheerio.load(fs.readFileSync('14.htm'));
 
 /*
 // Files: http://www.nhl.com/scores/htmlreports/20172018/PL020006.HTM
@@ -119,7 +118,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
     let allRows = $('.evenColor');
     let lastRow = allRows.get().length;
     for(i=0; i<lastRow; i++) {
-    //for (i=68; i<69; i++) { //just to test one row
+    //for (i=183; i<184; i++) { //just to test one row
         let actualRow = allRows.eq(i).find("td.bborder");
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID;
@@ -314,8 +313,10 @@ async function handleBlock(id, blockText, HomePlayersOnIce, VisitorPlayersOnIce,
 async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
     // 'NSH #76 SUBBAN&#xA0;Delaying Game-Puck over glass(2 min), Def. Zone'
     // PIT #71 MALKIN&#xA0;Slashing(2 min), Neu. Zone Drawn By: NSH #76 SUBBAN
-    // Ausnahme: Teampenalty:
-    // TOR TEAM&#xA0;Too many men/ice - bench(2 min) Served By: #16 MARNER (aktuell werden diese ignoriert)
+    // Ausnahme 1: Teampenalty:
+    // TOR TEAM&#xA0;Too many men/ice - bench(2 min) Served By: #16 MARNER
+    // Ausnahme 2: 10 Minuten für Torhüter
+    // ANA #36 GIBSON Misconduct (10 min)(10 min) Served By: #40 BOLL
     let textArray = penaltyText.split(";");
     let penaltyTeam = textArray[0].substring(0,3).trim();
     let penaltyPlayerNumber = textArray[0].substring(5,7).trim();
@@ -328,49 +329,42 @@ async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOn
         i++
     }
     const penaltyObj = new storingObj('penalty', Client);
-    if (penaltyPlayerNumber != "EA") { // If PlayerNumber is "EA" it's a TeamPenalty (ignored)
+    if (! penaltyText.includes("TEAM")) { //Normal case (not Team Penalty)
         if (penaltyTeam === ATeamIDdef) {
             penaltyPlayer = await getPlayerName(penaltyPlayerNumber, VisitorPlayersOnIce, ATeamIDdef);
         }
         if (penaltyTeam === HTeamIDdef) {
             penaltyPlayer = await getPlayerName(penaltyPlayerNumber, HomePlayersOnIce, HTeamIDdef);
         }
-        let i = 0;
-        let drawnText = penaltyText.split(": ");
-        let drawnTeam = "";
-        let drawnPlayerNumber = "";
-        let drawnPlayer = "";
-        penaltyObj.addData({
-            'length': penaltyDuration,
-            player_id: penaltyPlayer,
-            reason: penaltyString,
-            team_id: penaltyTeam,
-            play_id: id
-        });
-
-        if (!(drawnText[1] === undefined)) {
-            drawnTeam = drawnText[1].substring(0, 3);
-            drawnPlayerNumber = drawnText[1].substring(5, 7).trim();
-            if (drawnTeam === ATeamIDdef) {
-                drawnPlayer = await getPlayerName(drawnPlayerNumber, VisitorPlayersOnIce, ATeamIDdef);
+        if (! penaltyText.includes("Served By")) { // Not Goalie
+            let i = 0;
+            let drawnText = penaltyText.split(": ");
+            let drawnTeam = "";
+            let drawnPlayerNumber = "";
+            let drawnPlayer = "";
+            if (!(drawnText[1] === undefined)) {
+                drawnTeam = drawnText[1].substring(0, 3);
+                drawnPlayerNumber = drawnText[1].substring(5, 7).trim();
+                if (drawnTeam === ATeamIDdef) {
+                    drawnPlayer = await getPlayerName(drawnPlayerNumber, VisitorPlayersOnIce, ATeamIDdef);
+                }
+                if (drawnTeam === HTeamIDdef) {
+                    drawnPlayer = await getPlayerName(drawnPlayerNumber, HomePlayersOnIce, HTeamIDdef);
+                }
+                penaltyObj.addData({'drawn_team_id': drawnTeam, 'drawn_player_id': drawnPlayer});
             }
-            if (drawnTeam === HTeamIDdef) {
-                drawnPlayer = await getPlayerName(drawnPlayerNumber, HomePlayersOnIce, HTeamIDdef);
-            }
-            penaltyObj.addData({'drawn_team_id': drawnTeam, 'drawn_player_id': drawnPlayer});
         }
-        await penaltyObj.store();
     }
-    if (penaltyPlayerNumber == "EA") { //Exception-Case: Team Penalty
-        penaltyObj.addData({
-            'length': penaltyDuration,
-            player_id: "TEAMPLAYER", //Special virtual Player..
-            reason: penaltyString,
-            team_id: penaltyTeam,
-            play_id: id
-        });
-        await penaltyObj.store();
-    }
+    if (penaltyText.includes("TEAM")) { penaltyPlayer = "TEAMPLAYER";}
+
+    penaltyObj.addData({
+        'length': penaltyDuration,
+        player_id: penaltyPlayer, // either the Player or Teamplayer
+        reason: penaltyString,
+        team_id: penaltyTeam,
+        play_id: id
+    });
+    await penaltyObj.store();
 }
 
 async function handleGoal(id, goalText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
@@ -461,7 +455,7 @@ async function updatePlayer(name, team, position, number, GameDate) {  // looks 
     }
 }
 
-//await removeGameFromDB('100000004');
+//await removeGameFromDB('100000014');
 await storeGameDetails();
 
 await client.end();
