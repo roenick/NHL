@@ -1,5 +1,5 @@
 (async () => {
-
+// Problem bei 11.htm: Play 184: Penalty ist nicht standard!
 class storingObj {
     constructor(table, client) {
         this.table = table;
@@ -36,7 +36,6 @@ class storingObj {
         let query = {text: queryText, values: valuesObj};
         console.log(query);
         let res = await client.query(query);
-
     }
 }
 //    text: 'INSERT INTO faceoff(winning_team_id, losing_team_id, play_id, winning_player_id, losing_player_id) VALUES($winningTeam, $losingTeam, $play_id, $winning_player, $losing_player)',
