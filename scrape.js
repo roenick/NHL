@@ -34,6 +34,7 @@ class storingObj {
         }
         queryText = queryText.slice(0,-2) + ")";
         let query = {text: queryText, values: valuesObj};
+        console.log(query);
         let res = await client.query(query);
 
     }
@@ -59,7 +60,7 @@ named.patch(client);
 
 await client.connect();
 
-$ = cheerio.load(fs.readFileSync('4.htm'));
+$ = cheerio.load(fs.readFileSync('11.htm'));
 
 /*
 // Files: http://www.nhl.com/scores/htmlreports/20172018/PL020006.HTM
@@ -80,7 +81,6 @@ async function storeGameDetails() {
     let AScore = $('#Visitor table td').eq(1).text();
     let HScore = $('#Home table td').eq(1).text();
     let HTeam = $('#Home td').last().html().split("<br>")[0];
-
     let GameInfo = $('#GameInfo').find('tr');
     let GameID = 10000 + GameInfo.eq(-2).text().replace(/(\n)/gm,"").split(" ")[1]; //Playoff-Games are 10000+
 
@@ -120,7 +120,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
     let allRows = $('.evenColor');
     let lastRow = allRows.get().length;
     for(i=0; i<lastRow; i++) {
-    //for (i=306; i<307; i++) { //just to test one row
+    //for (i=68; i<69; i++) { //just to test one row
         let actualRow = allRows.eq(i).find("td.bborder");
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID;
@@ -185,7 +185,7 @@ async function storeOnIce(playerArray, Team, PlayID) {
     let arrayLength = playerArray.length;
     for (let i=0; i<arrayLength;i++) {
         playerData = playerArray[i];
-        onIceObj.addData({'team_id': Team, 'play_id':PlayID, 'position':playerData[2], 'player_id':playerData[0], 'number':playerData[1]});
+        onIceObj.addData({'team_id': Team, 'play_id':PlayID, 'position':playerData[2], 'player_id':playerData[0].replace("'",""), 'number':playerData[1]});
         await onIceObj.store();
         onIceObj.clearData();
     }
@@ -331,10 +331,10 @@ async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOn
     const penaltyObj = new storingObj('penalty', Client);
     if (penaltyPlayerNumber != "EA") { // If PlayerNumber is "EA" it's a TeamPenalty (ignored)
         if (penaltyTeam === ATeamIDdef) {
-            penaltyPlayer = await getPlayerName(penaltyPlayerNumber, VisitorPlayersOnIce);
+            penaltyPlayer = await getPlayerName(penaltyPlayerNumber, VisitorPlayersOnIce, ATeamIDdef);
         }
         if (penaltyTeam === HTeamIDdef) {
-            penaltyPlayer = await getPlayerName(penaltyPlayerNumber, HomePlayersOnIce);
+            penaltyPlayer = await getPlayerName(penaltyPlayerNumber, HomePlayersOnIce, HTeamIDdef);
         }
         let i = 0;
         let drawnText = penaltyText.split(": ");
@@ -431,7 +431,6 @@ async function getPlayerName(number, playerArray, teamName) {
     }
     if (found === false) {
         let queryString = "SELECT name FROM player WHERE number = " + number + " AND actual_team_id ='" + teamName + "'";
-
         let playerName = await client.query(queryString);
         if (playerName.rows[0] === undefined) {return false}
         else {
