@@ -40,7 +40,7 @@ class storingObj {
 //    text: 'INSERT INTO faceoff(winning_team_id, losing_team_id, play_id, winning_player_id, losing_player_id) VALUES($winningTeam, $losingTeam, $play_id, $winning_player, $losing_player)',
 //        values: {'winningTeam': winningTeam, 'losingTeam': losingTeam, 'play_id': id, 'winning_player': winningPlayer, 'losing_player': losingPlayer }
 
-let request = require('request');
+let request = require('request-promise');
 let cheerio = require('cheerio');
 let fs = require('fs'); // Für Testzwecke lokale Files nehmen...
 const {Client} = require('pg'); //postgress
@@ -58,13 +58,14 @@ named.patch(client);
 
 await client.connect();
 
-$ = cheerio.load(fs.readFileSync('14.htm'));
+$ = cheerio.load(fs.readFileSync('21.htm'));
 
 /*
 // Files: http://www.nhl.com/scores/htmlreports/20172018/PL020006.HTM
 request('http://www.nhl.com/scores/htmlreports/20162017/PL030411.HTM', function (error, response, html) {
      if (!error && response.statusCode == 200) {
          var $ = cheerio.load(html);
+
      }
 });
 */
@@ -118,7 +119,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
     let allRows = $('.evenColor');
     let lastRow = allRows.get().length;
     for(i=0; i<lastRow; i++) {
-    //for (i=183; i<184; i++) { //just to test one row
+    //for (i=239; i<240; i++) { //just to test one row
         let actualRow = allRows.eq(i).find("td.bborder");
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID;
@@ -356,7 +357,6 @@ async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOn
         }
     }
     if (penaltyText.includes("TEAM")) { penaltyPlayer = "TEAMPLAYER";}
-
     penaltyObj.addData({
         'length': penaltyDuration,
         player_id: penaltyPlayer, // either the Player or Teamplayer
@@ -455,8 +455,14 @@ async function updatePlayer(name, team, position, number, GameDate) {  // looks 
     }
 }
 
-//await removeGameFromDB('100000014');
+await request('http://www.nhl.com/scores/htmlreports/20172018/PL020032.HTM', function (error, response, html) {
+    if (!error && response.statusCode == 200) {
+        $ = cheerio.load(html);
+    }
+});
+
 await storeGameDetails();
+//await removeGameFromDB('100000021')
 
 await client.end();
 
