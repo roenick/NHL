@@ -65,7 +65,6 @@ $ = cheerio.load(fs.readFileSync('21.htm'));
 request('http://www.nhl.com/scores/htmlreports/20162017/PL030411.HTM', function (error, response, html) {
      if (!error && response.statusCode == 200) {
          var $ = cheerio.load(html);
-
      }
 });
 */
@@ -119,7 +118,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
     let allRows = $('.evenColor');
     let lastRow = allRows.get().length;
     for(i=0; i<lastRow; i++) {
-    //for (i=239; i<240; i++) { //just to test one row
+    //for (i=77; i<78; i++) { //just to test one row
         let actualRow = allRows.eq(i).find("td.bborder");
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID;
@@ -454,8 +453,10 @@ async function updatePlayer(name, team, position, number, GameDate) {  // looks 
         }
     }
 }
+let gameNr = 36;
 
-await request('http://www.nhl.com/scores/htmlreports/20172018/PL020032.HTM', function (error, response, html) {
+let link = `http://www.nhl.com/scores/htmlreports/20172018/PL0200${gameNr}.HTM`;
+await request(link, function (error, response, html) {
     if (!error && response.statusCode == 200) {
         $ = cheerio.load(html);
     }
