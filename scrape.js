@@ -46,6 +46,8 @@ let fs = require('fs'); // Für Testzwecke lokale Files nehmen...
 const {Client} = require('pg'); //postgress
 const named = require('node-postgres-named');
 
+const delay = require('delay');
+
 const client = new Client({
     user: 'postgres',
     host: 'localhost',
@@ -164,17 +166,46 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
         }
         await storeOnIce(HomePlayersOnIce, HTeamIDdef, ID);
         await storeOnIce(VisitorPlayersOnIce, ATeamIDdef, ID);
+        if (Period === '5') { //Shootout
+            await handleShootout(ID, actualRow.eq(5).html(), EventType, HomePlayersOnIce,VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);
+        } else {
+            if (EventType === 'FAC') {await handleFaceoff(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+            if (EventType === 'HIT') {await handleHit(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+            if (EventType === 'SHOT') {await handleShot(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+            if (EventType === 'MISS') {await handleMiss(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+            if (EventType === 'GIVE') {await handleGiveaway(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+            if (EventType === 'STOP') {await handleStop(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+            if (EventType === 'BLOCK') {await handleBlock(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+            if (EventType === 'PENL') {await handlePenalty(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+            if (EventType === 'GOAL') {await handleGoal(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+            if (EventType === 'TAKE') {await handleTakeaway(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
 
-        if (EventType === 'FAC') {await handleFaceoff(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
-        if (EventType === 'HIT') {await handleHit(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
-        if (EventType === 'SHOT') {await handleShot(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
-        if (EventType === 'MISS') {await handleMiss(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
-        if (EventType === 'GIVE') {await handleGiveaway(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
-        if (EventType === 'STOP') {await handleStop(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
-        if (EventType === 'BLOCK') {await handleBlock(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
-        if (EventType === 'PENL') {await handlePenalty(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
-        if (EventType === 'GOAL') {await handleGoal(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
-        if (EventType === 'TAKE') {await handleTakeaway(ID, actualRow.eq(5).html(), HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef);}
+
+        }
+    }
+}
+
+
+
+async function handleShootout(id, shootoutText, eventType, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
+    if (['GOAL','SHOT','MISS'].includes(eventType)) { // only possibilities are those 3 others are ignored
+        let textArray = shootoutText.split(', ');
+        let shootingTeam = textArray[0].substring(0, 3);
+        let hashPos = textArray[0].search('#');
+        let shootingPlayerNumber = textArray[0].substring(hashPos + 1, hashPos + 3).trim();
+        let goalieTeam = "";
+        if (shootingTeam === HTeamIDdef) {
+            goalieName = VisitorPlayersOnIce[0][0];
+            goalieTeam=ATeamIDdef
+        } else {
+            goalieName = HomePlayersOnIce[0][0]
+            goalieTeam = HTeamIDdef};
+        shootingPlayer = await getPlayerName(shootingPlayerNumber, [], shootingTeam);
+        let scored = false;
+        if (eventType=="GOAL") {scored = true;}
+        let shootoutObj = new storingObj('shootout',client);
+        shootoutObj.addData({'goalie_team_id': goalieTeam, 'player_id': shootingPlayer, 'goalie_id': goalieName, 'play_id': id, 'scored': scored, 'team_id': shootingTeam});
+        await shootoutObj.store();
     }
 }
 
@@ -195,6 +226,7 @@ async function handleFaceoff(id, FaceOffText, HomePlayersOnIce, VisitorPlayersOn
     let tempString = FaceOffText.substring(3,FaceOffText.length);
     let winningNumber = tempString.split(winningTeam)[1].substring(2,4).trim();
     let losingNumber = tempString.split(losingTeam)[1].substring(2,4).trim();
+
     let winningPlayer = "";
     let losingPlayer = "";
     if (winningTeam === ATeamIDdef) {
@@ -453,18 +485,25 @@ async function updatePlayer(name, team, position, number, GameDate) {  // looks 
         }
     }
 }
-let gameNr = 36;
 
-let link = `http://www.nhl.com/scores/htmlreports/20172018/PL0200${gameNr}.HTM`;
-await request(link, function (error, response, html) {
-    if (!error && response.statusCode == 200) {
-        $ = cheerio.load(html);
-    }
-});
 
-await storeGameDetails();
-//await removeGameFromDB('100000021')
+// Im Spiel 17 gab es Penaltyschiessen.... Period 5. Neue Tabelle evtl?
+let gameNr = 16;
 
+while (gameNr < 17) {
+    gameNr++;
+    let link = `http://www.nhl.com/scores/htmlreports/20172018/PL0200${gameNr}.HTM`;
+    await request(link, function (error, response, html) {
+        if (!error && response.statusCode == 200) {
+            $ = cheerio.load(html);
+        }
+    });
+
+    await storeGameDetails();
+    console.log("Game: " + gameNr + " ok!")
+    await delay(5000);
+}
+//await removeGameFromDB('100000015')
 await client.end();
 
 })().catch(e => setImmediate(() => { throw e }));
