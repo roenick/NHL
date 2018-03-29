@@ -399,7 +399,7 @@ async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOn
 
 async function handleGoal(id, goalText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
     // 'NSH #32 GAUDREAU(1), Wrist, Off. Zone, 17 ft. Assists: #51 WATSON(3); #12 FISHER(2)'
-    // Achtung: was passiert, wenn shotDistance < 10 ???
+
     let textArray = goalText.split(", ");
     let goalTeam = textArray[0].substring(0,3);
     let goalScorerNumber = textArray[0].substring(5,7).trim();
@@ -407,14 +407,25 @@ async function handleGoal(id, goalText, HomePlayersOnIce, VisitorPlayersOnIce, H
     if (goalTeam === ATeamIDdef) {goalPlayerId = await getPlayerName(goalScorerNumber, VisitorPlayersOnIce, ATeamIDdef);}
     if (goalTeam === HTeamIDdef) {goalPlayerId = await getPlayerName(goalScorerNumber, HomePlayersOnIce, HTeamIDdef);}
     let shotType = textArray[1];
-    let shotDistance = textArray[3].substring(0,3).trim();
+    let shotDistance = '';
+    let assistsTextArray = [];
+    if (shotType ==='Penalty Shot') shotDistance=textArray[4].substring(0,3).trim();
+    if (shotType.includes("Zone")) {
+        shotType = "";
+        shotDistance = textArray[2].substring(0, 3).trim();
+        assistsTextArray = textArray[2].split("#");
+    }
+    if (shotType != 'Penalty Shot' && shotType != '' ) {
+        shotDistance=textArray[3].substring(0,3).trim();
+        assistsTextArray = textArray[3].split("#");
+    }
+
     if (shotDistance.slice(-1)=="f") {shotDistance=shotDistance.substring(0,1)} //If Distance < 10 shotDistance is "8 f"
 
     const goalObj = new storingObj('goal', Client);
     goalObj.addData({'player_id': goalPlayerId, 'distance':shotDistance, 'team_id':goalTeam, 'shot_type':shotType, 'play_id':id});
     await goalObj.store();
 
-    let assistsTextArray = textArray[3].split("#");
     for (let i=1; i<assistsTextArray.length;i++) {
         let assistPlayerId ="";
         let assistPlayerNumber = assistsTextArray[i].substring(0,2).trim();
@@ -492,12 +503,12 @@ async function updatePlayer(name, team, position, number, GameDate) {  // looks 
     }
 }
 
-// Problem bei Game 47- Handlemiss!!
-let gameNr = 46;
+// Fehler bei Game 109 Splate t existiert nicht
+let gameNr = 108;
 
-while (gameNr < 47) {
+while (gameNr < 109) {
     gameNr++;
-    let link = `http://www.nhl.com/scores/htmlreports/20172018/PL0200${gameNr}.HTM`;
+    let link = `http://www.nhl.com/scores/htmlreports/20172018/PL020${gameNr}.HTM`;
     await request(link, function (error, response, html) {
         if (!error && response.statusCode == 200) {
             $ = cheerio.load(html);
@@ -512,4 +523,3 @@ while (gameNr < 47) {
 await client.end();
 
 })().catch(e => setImmediate(() => { throw e }));
-
