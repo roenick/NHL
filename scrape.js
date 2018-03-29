@@ -186,7 +186,6 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
 }
 
 
-
 async function handleShootout(id, shootoutText, eventType, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
     if (['GOAL','SHOT','MISS'].includes(eventType)) { // only possibilities are those 3 others are ignored
         let textArray = shootoutText.split(', ');
@@ -483,14 +482,20 @@ async function updatePlayer(name, team, position, number, GameDate) {  // looks 
             };
             let res = await client.query(query2)
         }
+        if (result.rows[0].number != number) { //Number has changed
+            const query3 = {
+                text: 'UPDATE player SET number = $number, date = $GDate WHERE id = $id',
+                values: {'number': number, 'GDate': GameDate.toDateString(), 'id': result.rows[0].id}
+            };
+            let res = await client.query(query3)
+        }
     }
 }
 
+// Problem bei Game 47- Handlemiss!!
+let gameNr = 34;
 
-// Im Spiel 17 gab es Penaltyschiessen.... Period 5. Neue Tabelle evtl?
-let gameNr = 16;
-
-while (gameNr < 17) {
+while (gameNr < 51) {
     gameNr++;
     let link = `http://www.nhl.com/scores/htmlreports/20172018/PL0200${gameNr}.HTM`;
     await request(link, function (error, response, html) {
