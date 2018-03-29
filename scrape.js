@@ -288,7 +288,7 @@ async function handleMiss(id, missText, HomePlayersOnIce, VisitorPlayersOnIce, H
     if (missingTeam === ATeamIDdef) { missingPlayer = await getPlayerName(missingPlayerNumber,VisitorPlayersOnIce, ATeamIDdef);}
     if (missingTeam === HTeamIDdef) { missingPlayer = await getPlayerName(missingPlayerNumber,HomePlayersOnIce, HTeamIDdef);}
     let shotType = textArray[1].trim();
-    let shotDistance = textArray[4].substring(0,2).trim();
+    let shotDistance = textArray[textArray.length-1].substring(0,2).trim(); // I take the last Element because sometimes "Zone" is missing...
 
     let missObj = new storingObj('miss', Client);
     missObj.addData({'player_id': missingPlayer, 'distance': shotDistance, 'team_id': missingTeam, 'shot_type': shotType, 'play_id': id});
@@ -493,9 +493,9 @@ async function updatePlayer(name, team, position, number, GameDate) {  // looks 
 }
 
 // Problem bei Game 47- Handlemiss!!
-let gameNr = 34;
+let gameNr = 46;
 
-while (gameNr < 51) {
+while (gameNr < 47) {
     gameNr++;
     let link = `http://www.nhl.com/scores/htmlreports/20172018/PL0200${gameNr}.HTM`;
     await request(link, function (error, response, html) {
