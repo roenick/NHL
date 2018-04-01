@@ -120,7 +120,7 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
     let allRows = $('.evenColor');
     let lastRow = allRows.get().length;
     for(i=0; i<lastRow; i++) {
-    //for (i=77; i<78; i++) { //just to test one row
+        //for (i=77; i<78; i++) { //just to test one row
         let actualRow = allRows.eq(i).find("td.bborder");
         let InGameID = actualRow.eq(0).text();
         let ID = 1000 * GameID + InGameID;
@@ -185,7 +185,6 @@ async function storePlays(GameID, ATeamIDdef, HTeamIDdef, GDate) {
     }
 }
 
-
 async function handleShootout(id, shootoutText, eventType, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
     if (['GOAL','SHOT','MISS'].includes(eventType)) { // only possibilities are those 3 others are ignored
         let textArray = shootoutText.split(', ');
@@ -221,20 +220,30 @@ async function storeOnIce(playerArray, Team, PlayID) {
 
 async function handleFaceoff(id, FaceOffText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) { // 'NSH won Neu. Zone - NSH #12 FISHER vs PIT #87 CROSBY'
     let winningTeam = FaceOffText.substring(0,3);
-    if (winningTeam === HTeamIDdef) {losingTeam = ATeamIDdef} else {losingTeam = HTeamIDdef}
     let tempString = FaceOffText.substring(3,FaceOffText.length);
-    let winningNumber = tempString.split(winningTeam)[1].substring(2,4).trim();
-    let losingNumber = tempString.split(losingTeam)[1].substring(2,4).trim();
-
+    let test1 = tempString.split("#");
+    let number1 = test1[1].substring(0,2).trim();
+    let number2 = test1[2].substring(0,2).trim();
+    let winningNumber = 0;
+    let losingNumber = 0;
+    if (winningTeam === HTeamIDdef) {
+        losingTeam = ATeamIDdef;
+        losingNumber = number1;
+        winningNumber = number2;
+    } else {
+        losingTeam = HTeamIDdef;
+        losingNumber = number2;
+        winningNumber = number1;
+        }
     let winningPlayer = "";
     let losingPlayer = "";
     if (winningTeam === ATeamIDdef) {
         winningPlayer = await getPlayerName(winningNumber,VisitorPlayersOnIce, ATeamIDdef);
-        losingPlayer = await getPlayerName(losingNumber, HomePlayersOnIce, ATeamIDdef);
+        losingPlayer = await getPlayerName(losingNumber, HomePlayersOnIce, HTeamIDdef);
     }
     if (winningTeam === HTeamIDdef) {
         winningPlayer = await getPlayerName(winningNumber,HomePlayersOnIce, HTeamIDdef);
-        losingPlayer = await getPlayerName(losingNumber, VisitorPlayersOnIce, HTeamIDdef);
+        losingPlayer = await getPlayerName(losingNumber, VisitorPlayersOnIce, ATeamIDdef);
     }
     let faceoffObj = new storingObj('faceoff', Client);
     faceoffObj.addData({'winning_team_id': winningTeam, 'losing_team_id': losingTeam, 'play_id': id, 'winning_player_id': winningPlayer, 'losing_player_id': losingPlayer});
@@ -268,12 +277,13 @@ async function handleShot(id, shootText, HomePlayersOnIce, VisitorPlayersOnIce, 
     let shootingTeam = textArray[0].substring(0,3);
     let hashPos = textArray[0].search('#');
     let shootingPlayerNumber = textArray[0].substring(hashPos+1,hashPos+3).trim();
-
     if (shootingTeam === ATeamIDdef) { shootingPlayer = await getPlayerName(shootingPlayerNumber,VisitorPlayersOnIce, ATeamIDdef);}
     if (shootingTeam === HTeamIDdef) { shootingPlayer = await getPlayerName(shootingPlayerNumber,HomePlayersOnIce, HTeamIDdef);}
 
     let shotType = textArray[1].trim();
-    let shotDistance = textArray[3].substring(0,2).trim();
+    if (shotType.includes("Zone")) shotType="";
+    let lastEl = textArray.length-1; //Shot-Distance ist at last Element
+    let shotDistance = textArray[lastEl].substring(0,2).trim();
 
     let shotObj = new storingObj('shot', Client);
     shotObj.addData({'player_id': shootingPlayer, 'distance': shotDistance, 'shot_type': shotType, 'team_id': shootingTeam, 'play_id': id});
@@ -288,6 +298,7 @@ async function handleMiss(id, missText, HomePlayersOnIce, VisitorPlayersOnIce, H
     if (missingTeam === ATeamIDdef) { missingPlayer = await getPlayerName(missingPlayerNumber,VisitorPlayersOnIce, ATeamIDdef);}
     if (missingTeam === HTeamIDdef) { missingPlayer = await getPlayerName(missingPlayerNumber,HomePlayersOnIce, HTeamIDdef);}
     let shotType = textArray[1].trim();
+    if (shotType == "Wide of Net") shotType = ""; // rarely shotType is omitted
     let shotDistance = textArray[textArray.length-1].substring(0,2).trim(); // I take the last Element because sometimes "Zone" is missing...
 
     let missObj = new storingObj('miss', Client);
@@ -348,9 +359,10 @@ async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOn
     // TOR TEAM&#xA0;Too many men/ice - bench(2 min) Served By: #16 MARNER
     // Ausnahme 2: 10 Minuten für Torhüter
     // ANA #36 GIBSON Misconduct (10 min)(10 min) Served By: #40 BOLL
-    let textArray = penaltyText.split(";");
+    let textArray = penaltyText.split("A0;");
     let penaltyTeam = textArray[0].substring(0,3).trim();
     let penaltyPlayerNumber = textArray[0].substring(5,7).trim();
+    if (penaltyPlayerNumber == "&") return;  // rare case where no Player is given (Penalty that leads to Penalty Shoot)
     let penaltyPlayer = "";
     let penaltyDuration = /\([0-9]+ /.exec(textArray[1])[0].substring(1);
     let penaltyString = "";
@@ -399,27 +411,28 @@ async function handlePenalty(id, penaltyText, HomePlayersOnIce, VisitorPlayersOn
 
 async function handleGoal(id, goalText, HomePlayersOnIce, VisitorPlayersOnIce, HTeamIDdef, ATeamIDdef) {
     // 'NSH #32 GAUDREAU(1), Wrist, Off. Zone, 17 ft. Assists: #51 WATSON(3); #12 FISHER(2)'
-
     let textArray = goalText.split(", ");
     let goalTeam = textArray[0].substring(0,3);
     let goalScorerNumber = textArray[0].substring(5,7).trim();
     let goalPlayerId ="";
     if (goalTeam === ATeamIDdef) {goalPlayerId = await getPlayerName(goalScorerNumber, VisitorPlayersOnIce, ATeamIDdef);}
     if (goalTeam === HTeamIDdef) {goalPlayerId = await getPlayerName(goalScorerNumber, HomePlayersOnIce, HTeamIDdef);}
-    let shotType = textArray[1];
+    let shotType = "";
+    let lastEl = textArray.length-1;
+    if (textArray.length>2) shotType = textArray[1]; // in rare cases shotType and Zone are missing
     let shotDistance = '';
     let assistsTextArray = [];
-    if (shotType ==='Penalty Shot') shotDistance=textArray[4].substring(0,3).trim();
+    if (shotType ==='Penalty Shot') shotDistance=textArray[lastEl].substring(0,3).trim();
     if (shotType.includes("Zone")) {
         shotType = "";
-        shotDistance = textArray[2].substring(0, 3).trim();
-        assistsTextArray = textArray[2].split("#");
+        shotDistance = textArray[lastEl].substring(0, 3).trim();
+        assistsTextArray = textArray[lastEl].split("#");
     }
     if (shotType != 'Penalty Shot' && shotType != '' ) {
-        shotDistance=textArray[3].substring(0,3).trim();
-        assistsTextArray = textArray[3].split("#");
+        shotDistance=textArray[lastEl].substring(0,3).trim();
+        assistsTextArray = textArray[lastEl].split("#");
     }
-
+    if (shotDistance == "") shotDistance = "0";
     if (shotDistance.slice(-1)=="f") {shotDistance=shotDistance.substring(0,1)} //If Distance < 10 shotDistance is "8 f"
 
     const goalObj = new storingObj('goal', Client);
@@ -460,7 +473,7 @@ async function getPlayerName(number, playerArray, teamName) {
         if (playerArray[i][1] === number) {
             found = true;
             name = playerArray[i][0]; // Found it
-            return name.replace("'","");
+            return name.replace("'", "");
         }
     }
     if (found === false) {
@@ -503,10 +516,10 @@ async function updatePlayer(name, team, position, number, GameDate) {  // looks 
     }
 }
 
-// Fehler bei Game 109 Splate t existiert nicht
-let gameNr = 108;
+// I normally need to rerun all Faceoffs for Games 1-233
+let gameNr = 499;
 
-while (gameNr < 109) {
+while (gameNr < 500) {
     gameNr++;
     let link = `http://www.nhl.com/scores/htmlreports/20172018/PL020${gameNr}.HTM`;
     await request(link, function (error, response, html) {
@@ -517,9 +530,10 @@ while (gameNr < 109) {
 
     await storeGameDetails();
     console.log("Game: " + gameNr + " ok!")
-    await delay(5000);
+    await delay(1000);
 }
 //await removeGameFromDB('100000015')
 await client.end();
 
 })().catch(e => setImmediate(() => { throw e }));
+
