@@ -196,7 +196,7 @@ async function handleShootout(id, shootoutText, eventType, HomePlayersOnIce, Vis
             goalieName = VisitorPlayersOnIce[0][0];
             goalieTeam=ATeamIDdef
         } else {
-            goalieName = HomePlayersOnIce[0][0]
+            goalieName = HomePlayersOnIce[0][0];
             goalieTeam = HTeamIDdef};
         shootingPlayer = await getPlayerName(shootingPlayerNumber, [], shootingTeam);
         let scored = false;
