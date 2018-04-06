@@ -17,6 +17,7 @@ class storingObj {
     clearData() { // clears Data
         this.data = {};
     }
+
     async store() {
         let queryText = "INSERT INTO " + this.table + "(";
         let valuesObj = {};
