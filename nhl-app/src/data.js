@@ -1,3 +1,4 @@
+const data =
 [{
   "hits": 26,
   "name": "CONNOR MCDAVID",
@@ -179,3 +180,5 @@
   "id": 271,
   "points": 79
 }]
+
+export default data
